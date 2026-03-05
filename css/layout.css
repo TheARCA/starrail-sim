@@ -1,0 +1,107 @@
+/* =========================================================
+   LAYOUT & POSITIONING
+   Headers, battle screen container, and squad placement
+   ========================================================= */
+
+/* --- DECORATIVE HEADER --- */
+.header-container {
+  align-items: center;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.dec-line {
+  background: #ff007c;
+  box-shadow: 0 0 10px #ff007c;
+  height: 4px;
+  width: 100px;
+}
+
+h1 {
+  color: #fcee0a;
+  font-family: "Press Start 2P", monospace;
+  font-size: 24px;
+  margin: 0;
+  text-shadow: 4px 4px 0px #ff007c;
+}
+
+.badge {
+  background: #fcee0a;
+  border: 2px solid #fff;
+  box-shadow: 4px 4px 0px #ff007c;
+  color: #050508;
+  font-size: 24px;
+  font-weight: bold;
+  padding: 4px 15px;
+}
+
+.dec-box {
+  background: #00f3ff;
+  border: 2px solid #fff;
+  box-shadow: 4px 4px 0px #005555;
+  height: 20px;
+  width: 20px;
+}
+
+/* Combines your margin and absolute positioning */
+.stats-header {
+  align-items: center;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  left: 50%;
+  margin: 0;
+  position: absolute;
+  top: 20px;
+  transform: translateX(-50%);
+  z-index: 20;
+}
+
+/* --- ✨ FULLSCREEN HUD LAYOUT --- */
+#battle-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 10;
+  background-color: #050508;
+  background-image:
+    linear-gradient(rgba(0, 243, 255, 0.1) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(0, 243, 255, 0.1) 2px, transparent 2px);
+  background-size: 60px 60px; /* Big chunky grid */
+}
+
+.arena {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- SQUAD POSITIONING --- */
+.squad-layout {
+  align-items: flex-end;
+  display: flex;
+  gap: 20px;
+}
+
+/* Heroes anchored to Bottom Left (with space for the Queue) */
+#hero-squad-container {
+  position: absolute;
+  bottom: 40px;
+  left: 120px;
+  z-index: 20;
+}
+
+/* Enemies anchored to the Center */
+#enemy-squad-container {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 15;
+}

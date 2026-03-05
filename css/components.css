@@ -1,0 +1,156 @@
+/* =========================================================
+   COMPONENTS
+   Character cards, portraits, stats boxes, and progress bars
+   ========================================================= */
+
+/* --- CHARACTER CARDS --- */
+.character-card {
+  background-color: #000;
+  border: 3px solid;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative; /* ✨ NEW: ensures popups stay anchored to the card */
+  transition:
+    transform 0.1s,
+    opacity 0.2s,
+    filter 0.2s;
+  width: 160px;
+}
+
+.hero-theme {
+  border-color: #00f3ff;
+  box-shadow: 6px 6px 0px rgba(0, 243, 255, 0.3);
+}
+
+.enemy-theme {
+  border-color: #ff007c;
+  box-shadow: 6px 6px 0px rgba(255, 0, 124, 0.3);
+}
+
+/* --- ENEMY ATTACKING STATE --- */
+.enemy-attacking {
+  animation: pulseAttack 0.5s infinite alternate;
+  border-color: #ff007c !important;
+  box-shadow:
+    0 0 40px #ff007c,
+    inset 0 0 20px #ff007c !important;
+  transform: translateY(-20px) scale(1.1) !important;
+  z-index: 50;
+}
+
+@keyframes pulseAttack {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.5);
+  }
+}
+
+/* --- PORTRAITS --- */
+/* Lighter Monitor Overlay */
+.portrait-frame {
+  aspect-ratio: 1 / 1;
+  background: #0a0a0e;
+  border-bottom: 3px solid;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.portrait-frame::after {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  content: "";
+  height: 100%;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+.hero-theme .portrait-frame {
+  border-bottom-color: #00f3ff;
+}
+
+.enemy-theme .portrait-frame {
+  border-bottom-color: #ff007c;
+}
+
+.portrait-frame img {
+  display: block;
+  filter: contrast(1.1);
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+/* --- STATS & BARS --- */
+/* Readable Stats Box */
+.stats-box {
+  background-color: #0a0a0e;
+  padding: 12px;
+}
+
+.stats-box h2 {
+  color: #fff;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px; /* ✨ Bumped up for clarity */
+  margin: 4px 0 10px 0;
+  text-align: left;
+}
+
+/* CLEAN BARS (No segmented lines) */
+.bar-container {
+  background-color: #111;
+  border: 2px solid #333;
+  height: 20px; /* ✨ Taller bars for text fit */
+  margin-top: 6px;
+  position: relative;
+  width: 100%;
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.1s linear;
+  width: 100%;
+}
+
+.toughness-fill {
+  background-color: #fff;
+  border-right: 2px solid #aaa;
+}
+
+.hp-fill {
+  background-color: #00ff00;
+  border-right: 2px solid #00aa00;
+}
+
+.en-fill {
+  background-color: #ff007c;
+  border-right: 2px solid #ff99cc;
+}
+
+.bar-text {
+  color: #fff;
+  font-size: 18px;
+  left: 0;
+  line-height: 16px;
+  position: absolute;
+  text-align: center;
+  text-shadow:
+    1px 1px 0px #000,
+    -1px -1px 0px #000,
+    1px -1px 0px #000,
+    -1px 1px 0px #000; /* ✨ Crisp readable outline */
+  top: 0;
+  width: 100%;
+  z-index: 5;
+}

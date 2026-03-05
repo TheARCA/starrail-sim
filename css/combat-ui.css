@@ -1,0 +1,716 @@
+/* =========================================================
+   COMBAT UI
+   Bottom console, action buttons, battle log, SP, and Turn Queue
+   ========================================================= */
+
+/* --- BOTTOM CONSOLE & BUTTONS --- */
+.bottom-console {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column; /* Stack log on top of buttons */
+  gap: 20px;
+  margin: 0;
+  max-width: 400px;
+  padding: 0;
+  position: absolute;
+  bottom: 40px;
+  right: 40px;
+  z-index: 30;
+}
+
+.console-label {
+  align-items: center;
+  color: #00f3ff;
+  display: flex;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.command-module,
+.log-module {
+  width: 100%;
+}
+
+.controls {
+  display: flex;
+  flex-direction: row; /* Put Q and E side-by-side */
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-action {
+  background: #000;
+  border: 4px solid; /* Made borders even chunkier */
+  box-shadow: 6px 6px 0px; /* Thicker pixel shadow */
+  color: #fff;
+  cursor: pointer;
+  font-family: "Press Start 2P", monospace;
+  font-size: 12px;
+  overflow: hidden;
+  padding: 15px 15px;
+  position: relative;
+  text-align: left;
+  transition: all 0.1s steps(2);
+  flex: 1; /* Stretch horizontally */
+}
+
+#btn-ult {
+  flex-basis: 100%;
+}
+
+.action-basic {
+  border-color: #00f3ff;
+  box-shadow: 6px 6px 0px #005555;
+}
+
+.action-skill {
+  border-color: #fcee0a;
+  box-shadow: 6px 6px 0px #555500;
+  color: #fcee0a;
+}
+
+.action-ult {
+  border-color: #ff007c;
+  box-shadow: 6px 6px 0px #550022;
+}
+
+.btn-action:hover:not(:disabled) {
+  box-shadow: 2px 2px 0px;
+  filter: brightness(1.2);
+  transform: translate(2px, 2px);
+}
+
+.btn-action:hover:not(:disabled)::before {
+  animation: glitchSweep 0.2s forwards;
+  background: rgba(255, 255, 255, 0.2);
+  content: "";
+  height: 100%;
+  left: -100%;
+  position: absolute;
+  top: 0;
+  transform: skewX(-45deg);
+  width: 50%;
+}
+
+@keyframes glitchSweep {
+  100% {
+    left: 200%;
+  }
+}
+
+.btn-action:active:not(:disabled) {
+  box-shadow: 0px 0px 0px;
+  transform: translate(6px, 6px);
+}
+
+.btn-action:disabled {
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+/* --- ⌨️ KEYBOARD SHORTCUT BADGES --- */
+.btn-shortcut {
+  background: #000;
+  border-bottom: 2px solid;
+  border-left: 2px solid;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  padding: 4px 6px;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 5;
+}
+
+.btn-action.selected .btn-shortcut {
+  background: #fff;
+}
+
+#btn-basic .btn-shortcut {
+  border-color: #00f3ff;
+  color: #00f3ff;
+}
+
+#btn-skill .btn-shortcut {
+  border-color: #fcee0a;
+  color: #fcee0a;
+}
+
+#btn-ult .btn-shortcut {
+  border-color: #ff007c;
+  color: #ff007c;
+}
+
+/* --- TERMINAL BATTLE LOG --- */
+.log-module {
+  display: flex;
+  flex: 1.5;
+  flex-direction: column;
+}
+
+#battle-log {
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 3px solid #00f3ff;
+  border-left: 10px solid #00f3ff;
+  box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.2);
+  color: #00f3ff;
+  flex: 1;
+  font-size: 22px;
+  height: 160px;
+  line-height: 1.3;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 15px 10px 15px 20px;
+  text-align: left;
+}
+
+.log-entry {
+  margin-bottom: 6px;
+  text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+}
+
+.log-entry::before {
+  color: #fcee0a;
+  content: ">_ ";
+  text-shadow: none;
+}
+
+#battle-log::-webkit-scrollbar {
+  width: 14px;
+}
+
+#battle-log::-webkit-scrollbar-track {
+  background: #050508;
+  border-left: 2px solid #333;
+}
+
+#battle-log::-webkit-scrollbar-thumb {
+  background: #00f3ff;
+  border: 3px solid #050508;
+}
+
+#battle-log::-webkit-scrollbar-thumb:hover {
+  background: #ff007c;
+}
+
+/* --- SP INDICATORS --- */
+.sp-hud-container {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: auto;
+  background: #000;
+  border: 4px solid #333;
+  box-shadow: 6px 6px 0 #000;
+  padding: 10px 20px;
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+}
+
+.sp-label {
+  color: #fcee0a;
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 15px 0 0;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.sp-slots {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.sp-pip {
+  background-color: #111;
+  border: 3px solid #333;
+  height: 25px;
+  transition: background-color 0.1s steps(2);
+  width: 25px;
+}
+
+.sp-pip.active {
+  background-color: #fcee0a;
+  border-color: #fff;
+  box-shadow: 0 0 10px rgba(252, 238, 10, 0.5);
+}
+
+.sp-pip.preview-spend {
+  animation: pulseSpend 0.5s infinite alternate;
+  background: #ff007c;
+  box-shadow:
+    0 0 10px #ff007c,
+    inset 0 0 5px #000;
+  opacity: 0.8;
+}
+
+.sp-pip.preview-gain {
+  animation: pulseGain 0.5s infinite alternate;
+  background: transparent;
+  border: 2px dashed #00f3ff;
+  box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.5);
+}
+
+@keyframes pulseSpend {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.5);
+  }
+}
+
+@keyframes pulseGain {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(2);
+  }
+}
+
+/* --- ✨ 16-BIT TARGETING & CARD STATES --- */
+.squad-layout .character-card.is-targeted {
+  animation: targetPulsePixel 0.6s steps(2) infinite alternate;
+  border: 4px solid #ff007c;
+  box-shadow:
+    0 0 0 4px #000,
+    0 0 0 8px #ff007c,
+    12px 12px 0px #000;
+  transform: translateY(-15px) scale(1.05);
+  z-index: 15;
+}
+
+.squad-layout .character-card.is-targeted-adj {
+  border: 4px dashed #ffb8d8;
+  box-shadow: 6px 6px 0px #000;
+  transform: translateY(-5px) scale(1.02);
+  z-index: 12;
+}
+
+.squad-layout .character-card.is-targeted::after {
+  animation: targetBouncePixel 0.6s steps(2) infinite alternate;
+  color: #ff007c;
+  content: "▼ TARGET";
+  font-family: "Press Start 2P", monospace;
+  font-size: 16px;
+  left: 50%;
+  position: absolute;
+  text-shadow: 4px 4px 0px #000;
+  top: -45px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 20;
+}
+
+@keyframes targetBouncePixel {
+  from {
+    top: -50px;
+  }
+  to {
+    top: -35px;
+  }
+}
+
+@keyframes targetPulsePixel {
+  from {
+    border-color: #ff007c;
+  }
+  to {
+    border-color: #fff;
+  }
+}
+
+.character-card.is-dead {
+  animation: deathShatter 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  pointer-events: none;
+  z-index: 50; /* Bring to front while exploding */
+}
+
+@keyframes deathShatter {
+  0% {
+    filter: brightness(2) contrast(2) hue-rotate(90deg);
+    transform: scale(1) skewX(0);
+    opacity: 1;
+  }
+  20% {
+    filter: brightness(3) contrast(3) invert(1);
+    transform: scale(1.2, 0.8) skewX(-20deg);
+    opacity: 1;
+    border-color: #fff;
+  }
+  40% {
+    filter: brightness(1) contrast(2);
+    transform: scale(0.8, 1.2) skewX(20deg) translateX(10px);
+    opacity: 0.8;
+  }
+  100% {
+    filter: brightness(0);
+    transform: scale(0) translateY(-50px);
+    opacity: 0;
+  }
+}
+
+.squad-layout .character-card.is-ally-target {
+  animation: pulseAlly 1s infinite alternate;
+  border-color: #00ff00;
+  box-shadow:
+    0 0 20px rgba(0, 255, 0, 0.6),
+    6px 6px 0px #000;
+  transform: translateY(-12px);
+  z-index: 10;
+}
+
+@keyframes pulseAlly {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.3);
+  }
+}
+
+.character-card.is-dimmed {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+.character-card.is-acting {
+  border-color: #fcee0a;
+  box-shadow:
+    0 0 30px rgba(252, 238, 10, 0.4),
+    6px 6px 0 #000;
+  transform: translateY(-15px) scale(1.05);
+  z-index: 15;
+}
+
+.character-card.is-acting::before {
+  animation: blinkPixel 1s steps(2) infinite; /* ✨ FIXED: Uses the correct animation name! */
+  color: #fcee0a;
+  content: "▶ ACTIVE";
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  left: 50%;
+  position: absolute;
+  text-shadow: 2px 2px 0 #000;
+  top: -25px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 20; /* ✨ NEW: Forces it to render on top of everything */
+}
+
+/* --- ⏳ CYBERPUNK TURN QUEUE --- */
+.turn-queue {
+  align-items: center;
+  background: #050508;
+  border-right: 4px dashed #333;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  justify-content: flex-start;
+  margin: 0;
+  overflow: hidden;
+  padding: 25px 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 90px;
+  z-index: 30;
+}
+
+.turn-queue::before {
+  background: #333;
+  content: "";
+  height: 100%;
+  left: 50%;
+  position: absolute;
+  top: 0;
+  width: 4px;
+  z-index: 0;
+  transform: translateX(-50%);
+}
+
+.queue-item {
+  background: #000;
+  border: 2px solid;
+  box-shadow: 4px 4px 0 #000;
+  filter: grayscale(0.7) brightness(0.6);
+  height: 45px;
+  opacity: 1;
+  position: relative;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s;
+  width: 45px;
+  z-index: 1;
+}
+
+.queue-item.queue-targeted {
+  border-color: #ff007c !important;
+  box-shadow:
+    0 0 20px #ff007c,
+    inset 0 0 10px rgba(255, 0, 124, 0.5) !important;
+  filter: grayscale(0) brightness(1.3) !important;
+  transform: translateY(-10px) scale(1.1) !important;
+  z-index: 5;
+}
+
+.queue-item.queue-targeted::before {
+  animation: targetBounce 0.5s infinite alternate;
+  color: #ff007c;
+  content: "▼";
+  font-size: 14px;
+  left: 50%;
+  position: absolute;
+  text-shadow: 0 0 5px #ff007c;
+  top: -20px;
+  transform: translateX(-50%);
+}
+
+@keyframes targetBounce {
+  from {
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    transform: translateX(-50%) translateY(4px);
+  }
+}
+
+.queue-item.queue-targeted-adj {
+  border-color: #ffb8d8 !important;
+  box-shadow: 0 0 10px rgba(255, 184, 216, 0.8) !important;
+  filter: grayscale(0.2) brightness(1.1) !important;
+  transform: translateY(-5px) scale(1.05) !important;
+  z-index: 4;
+}
+
+.queue-item img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.queue-hero {
+  border-color: #00f3ff;
+}
+.queue-enemy {
+  border-color: #ff007c;
+}
+
+.queue-item.queue-active {
+  border-color: #fcee0a !important;
+  border-width: 4px;
+  box-shadow: 6px 6px 0px #000;
+  filter: grayscale(0) brightness(1.2);
+  height: 65px;
+  width: 65px;
+  z-index: 10;
+  margin-left: 20px;
+}
+
+.queue-item.queue-active::after {
+  animation: blinkPixel 0.4s steps(2) infinite;
+  color: #fcee0a;
+  content: "►";
+  font-size: 32px;
+  left: -35px;
+  top: 50%;
+  position: absolute;
+  transform: translateY(-50%);
+  text-shadow: 4px 4px 0 #000;
+}
+
+@keyframes blinkPixel {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes activePop {
+  0% {
+    filter: brightness(2);
+    transform: scale(0.8) translateY(10px);
+  }
+  100% {
+    filter: brightness(1.2);
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes queueShuffle {
+  0% {
+    transform: translateY(60px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.queue-shuffle {
+  animation: queueShuffle 0.15s ease-out forwards !important;
+}
+
+.queue-preview {
+  border-style: dashed !important;
+  filter: grayscale(0.5);
+  opacity: 0.6 !important;
+}
+
+.queue-av {
+  background: #050508;
+  border: 1px solid #fff;
+  bottom: -6px;
+  box-shadow: 2px 2px 0px #000;
+  color: #fff;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  padding: 3px 5px;
+  position: absolute;
+  right: -6px;
+  z-index: 20;
+}
+
+.queue-hero .queue-av {
+  border-color: #00f3ff;
+  color: #00f3ff;
+}
+
+.queue-enemy .queue-av {
+  border-color: #ff007c;
+  color: #ff007c;
+}
+
+/* Queue Status Indicators (FUA, ULT, Break) */
+.queue-counter-indicator {
+  border-color: #fcee0a !important;
+  box-shadow: 0 0 15px #fcee0a !important;
+}
+
+.queue-counter-indicator::before {
+  background: #fcee0a;
+  border: 1px solid #000;
+  color: #000;
+  content: "FUA";
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  padding: 2px 4px;
+  position: absolute;
+  right: -10px;
+  top: -12px;
+  z-index: 100;
+}
+
+.queue-ult-indicator {
+  border-color: #ff007c !important;
+  box-shadow: 0 0 15px #ff007c !important;
+}
+
+.queue-ult-indicator::before {
+  background: #ff007c;
+  border: 1px solid #fff;
+  color: #fff;
+  content: "ULT";
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  padding: 2px 4px;
+  position: absolute;
+  right: -10px;
+  top: -12px;
+  z-index: 100;
+}
+
+.queue-broken-preview {
+  animation: breakVibrate 0.1s infinite alternate !important;
+  border-color: #fff !important;
+  box-shadow:
+    0 0 15px #fff,
+    inset 0 0 10px #ff007c !important;
+  opacity: 1 !important;
+  z-index: 50;
+}
+
+@keyframes breakVibrate {
+  0% {
+    transform: translateX(-2px) scale(0.95);
+  }
+  100% {
+    transform: translateX(2px) scale(1.05);
+  }
+}
+
+/* Ultimate Interception Button */
+.ult-ready-badge {
+  align-items: center;
+  animation: pulseUltBadge 1s infinite alternate;
+  background: #ff007c;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px #ff007c;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  justify-content: center;
+  padding: 6px;
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  transition: transform 0.1s;
+  z-index: 50;
+}
+
+.ult-ready-badge:hover {
+  background: #fff;
+  color: #ff007c;
+  transform: scale(1.2);
+}
+
+@keyframes pulseUltBadge {
+  from {
+    box-shadow: 0 0 5px #ff007c;
+    filter: brightness(1);
+  }
+  to {
+    box-shadow: 0 0 20px #ff007c;
+    filter: brightness(1.5);
+  }
+}
+
+/* Passive Stack / UI Track */
+.passive-track {
+  display: flex;
+  gap: 8px;
+  height: 12px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.passive-pip {
+  background: #111;
+  border: 2px solid #444;
+  height: 10px;
+  transform: rotate(45deg);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  width: 10px;
+}
+
+.passive-pip.active {
+  background: #00f3ff;
+  border-color: #fff;
+  box-shadow: 0 0 10px #00f3ff;
+  transform: rotate(45deg) scale(1.2);
+}
