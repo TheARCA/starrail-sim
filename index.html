@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>HONKAI: STAR RAIL THE ARCADE</title>
+    <link
+      rel="shortcut icon"
+      href="img/chars/march7th_1.webp"
+      type="image/x-icon"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/combat-ui.css" />
+    <link rel="stylesheet" href="css/vfx-animations.css" />
+    <link rel="stylesheet" href="css/menus.css" />
+    <script type="module" src="js/menus.js"></script>
+    <script type="module" src="js/combat.js"></script>
+  <body>
+    <div class="scanlines"></div>
+
+    <div class="header-container">
+      <div class="dec-line"></div>
+      <h1>SYS.OP_BATTLE</h1>
+      <div class="dec-line"></div>
+    </div>
+
+    <div id="main-menu-screen">
+      <h1 class="glitch" data-text="HONKAI: STAR RAIL">HONKAI: STAR RAIL</h1>
+      <h2 style="color: #00f3ff; margin-bottom: 40px">
+        // BATTLE SIMULATOR //
+      </h2>
+
+      <button id="btn-loadout" class="btn-action" style="margin-bottom: 15px">
+        > CHARACTER LOADOUT
+      </button>
+      <button id="btn-custom-battle" class="btn-action">
+        > INITIALIZE CUSTOM BATTLE
+      </button>
+    </div>
+
+    <div id="selection-screen" style="display: none">
+      <div
+        id="selection-title"
+        class="console-label"
+        style="justify-content: center; font-size: 24px"
+      >
+        /// SELECT_INTERFACE
+      </div>
+      <div id="roster-container" class="roster-grid"></div>
+
+      <div id="selection-controls" style="margin-top: 40px; display: none">
+        <button id="btn-start-battle" class="btn-action action-ult">
+          INITIALIZE_LINK
+        </button>
+      </div>
+    </div>
+
+    <div id="loadout-screen" style="display: none">
+      <h2
+        style="
+          color: #fcee0a;
+          text-shadow: 4px 4px 0 #ff007c;
+          font-family: &quot;Press Start 2P&quot;, monospace;
+          margin-bottom: 30px;
+        "
+      >
+        /// SQUAD LOADOUT & EQUIPMENT
+      </h2>
+      <div id="loadout-container" class="roster-grid"></div>
+      <button id="btn-loadout-back" class="btn-action" style="margin-top: 40px">
+        > BACK TO MENU
+      </button>
+    </div>
+
+    <div id="battle-screen" style="display: none">
+      <div class="stats-header">
+        <div class="dec-box"></div>
+        <div id="wave-counter" class="badge">COMBAT_SIM_ACTIVE</div>
+        <div class="dec-box"></div>
+      </div>
+
+      <div class="arena">
+        <div id="hero-squad-container" class="squad-layout"></div>
+
+        <div class="sp-hud-container">
+          <div class="sp-label">MEM</div>
+          <div id="sp-slots" class="sp-slots"></div>
+        </div>
+
+        <div id="enemy-squad-container" class="squad-layout"></div>
+      </div>
+
+      <div id="turn-queue" class="turn-queue"></div>
+
+      <div class="bottom-console">
+        <div class="command-module">
+          <div class="console-label">/// COMMAND_INPUT</div>
+          <div class="controls">
+            <button id="btn-basic" class="btn-action action-basic">
+              STRIKE
+            </button>
+            <button id="btn-skill" class="btn-action action-skill">HACK</button>
+            <button id="btn-ult" class="btn-action action-ult">
+              OVERCLOCK
+            </button>
+          </div>
+        </div>
+
+        <div class="log-module">
+          <div class="console-label">
+            /// SYS_LOG <span class="blink">_</span>
+          </div>
+          <div id="battle-log"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
