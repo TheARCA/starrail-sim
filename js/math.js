@@ -139,7 +139,11 @@ export function calculateDamage(
   if (attacker.isHero && attacker.getDynamicAtkHero)
     atkBonus += attacker.getDynamicAtkHero();
 
+  if (attacker.isHero && attacker.getDynamicDmgHero)
+    dmgBonus += attacker.getDynamicDmgHero();
+
   let critRateBonus = 0;
+
   if (attacker.isHero && attacker.getDynamicCritRate) {
     critRateBonus += attacker.getDynamicCritRate(defender);
   }

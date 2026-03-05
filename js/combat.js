@@ -1336,7 +1336,6 @@ function renderSquad() {
     const isAll = selectedAction && targetType === "all" && currentHero;
 
     if (enemy.hp <= 0) {
-      card.style.display = "none"; // Hide dead enemies completely
       card.classList.add("is-dead");
       card.classList.remove(
         "is-targeted",
@@ -1609,6 +1608,11 @@ function executePlayerAction(actionType) {
         });
     }
 
+    if (move.onActionStart) {
+      move.onActionStart(currentHero, heroIndex);
+      renderHeroSquad(); // Update his UI bar instantly before the attack lands!
+    }
+
     if (move.cinematic) {
       playVisualEffect("battle-screen", move.cinematic);
     }
@@ -1852,8 +1856,11 @@ function executePlayerAction(actionType) {
         selectedAction = null;
         renderQueue();
 
-        // ✨ NEW: Queue FUA if an ally used a Basic ATK
-        if (actionType === "basic") {
+        if (
+          actionType === "basic" &&
+          enemySquad[targetEnemyIndex] &&
+          enemySquad[targetEnemyIndex].hp > 0
+        ) {
           playerSquad.forEach((ally) => {
             if (
               ally.uid !== currentHero.uid &&
