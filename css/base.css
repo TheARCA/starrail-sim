@@ -30,6 +30,20 @@ body {
   text-transform: uppercase;
 }
 
+#battle-screen {
+  cursor: none !important;
+}
+
+#battle-screen * {
+  cursor: none !important;
+  pointer-events: none !important;
+}
+
+body.show-cursor #battle-screen * {
+  pointer-events: auto !important;
+  cursor: crosshair !important;
+}
+
 /* --- CRT SCANLINE EFFECTS --- */
 
 .scanlines {
@@ -152,3 +166,4 @@ body::before {
     display: none !important;
   }
 }
+
