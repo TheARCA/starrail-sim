@@ -87,3 +87,68 @@ body::before {
     background-position: 0 80px;
   }
 }
+
+/* =========================================================
+   📱 MOBILE BLOCKER PROTOCOL
+   ========================================================= */
+#mobile-blocker {
+  display: none; /* Hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #050508;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  z-index: 9999; /* Sit on top of literally everything */
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.blocker-content {
+  border: 4px solid #ff0000;
+  box-shadow:
+    0 0 30px rgba(255, 0, 0, 0.5),
+    inset 0 0 20px rgba(255, 0, 0, 0.3);
+  padding: 40px;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.blocker-glitch {
+  color: #ff0000;
+  font-family: "Press Start 2P", monospace;
+  font-size: 24px;
+  text-shadow: 4px 4px 0 #000;
+  margin-bottom: 20px;
+  animation: dangerPulse 0.5s infinite alternate;
+}
+
+#mobile-blocker p {
+  color: #fff;
+  font-family: "Press Start 2P", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ✨ TRIGGER THE BLOCKER ON PHONES */
+/* Checks if the screen is narrow OR if the primary input is a touch screen */
+@media (max-width: 768px), (pointer: coarse) {
+  #mobile-blocker {
+    display: flex;
+  }
+
+  /* Hide the actual game so they can't interact with it behind the blocker */
+  #main-menu,
+  #battle-screen {
+    display: none !important;
+  }
+}
