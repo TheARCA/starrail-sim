@@ -1,9 +1,4 @@
-/* =========================================================
-   MENUS & LOADOUTS
-   Roster selection grid and character equipment screens
-   ========================================================= */
-
-/* --- ROSTER SELECTION --- */
+/* --- ROSTER SELECTION (FIXED HUD EDITION) --- */
 .roster-grid {
   display: flex;
   flex-wrap: wrap;
@@ -13,23 +8,44 @@
 }
 
 .roster-card {
-  background-color: #000;
+  background-color: #050508;
   border: 3px solid #333;
   box-shadow: 6px 6px 0 #000;
   cursor: pointer;
   transition: transform 0.1s;
   width: 140px;
+  position: relative; /* ✨ FIX 1: Keeps the selection badge locked to the card! */
 }
 
 .roster-card .portrait-frame {
+  height: 140px; /* ✨ FIX 2: Forces every portrait into a perfect square */
   border-bottom: 2px solid #333;
+  overflow: hidden;
+}
+
+.roster-card .portrait-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .roster-stats {
   color: #fff;
-  font-size: 20px;
   padding: 10px;
   text-align: center;
+}
+
+/* ✨ FIX 3: Forces the arcade font to stay tiny and cuts it off with "..." if it's too long! */
+.roster-stats h2 {
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px !important;
+  line-height: 1.4;
+  margin: 0;
+  text-shadow: 1px 1px 0 #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .roster-card:hover {
@@ -37,301 +53,299 @@
   box-shadow: 10px 10px 0 #00f3ff;
   transform: translate(-4px, -4px);
 }
-
 .roster-card.selected {
   border-color: #ff007c !important;
-  box-shadow: 10px 10px 0 #ff007c !important;
+  box-shadow: 10px 10px 0 #ff007c;
   transform: translate(-4px, -4px);
 }
 
+/* The Selection Badges */
 .count-badge {
-  background-color: #fcee0a;
-  border: 3px solid #000;
-  color: #000;
-  display: none;
+  background: #ff007c;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
   font-family: "Press Start 2P", monospace;
   font-size: 10px;
-  padding: 4px 8px;
+  height: 26px;
+  line-height: 26px;
   position: absolute;
   right: -10px;
+  text-align: center;
   top: -10px;
+  width: 26px;
   z-index: 10;
+  display: none;
 }
-
 .roster-card.selected .count-badge {
   display: block;
 }
+.hero-theme.selected .count-badge {
+  background: #00f3ff;
+  border-radius: 0;
+  height: auto;
+  padding: 4px 6px;
+  right: 0;
+  top: 0;
+  width: auto;
+}
 
-/* --- ✨ LOADOUT MENU UX UPGRADES --- */
+/* --- WIDESCREEN LOADOUT PANELS (HUD EDITION) --- */
 .loadout-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 40px;
+  max-width: 1050px;
   margin: 0 auto;
-  max-width: 850px;
+  padding-bottom: 50px;
 }
 
 .loadout-card {
-  background: rgba(10, 10, 14, 0.9);
-  border: 2px solid #333;
-  border-left: 8px solid #00f3ff;
-  box-shadow: 6px 6px 0px #000;
-  color: #fff;
   display: flex;
-  gap: 25px;
-  padding: 15px;
-  text-align: left;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: linear-gradient(135deg, #050508 0%, #0a0a0e 100%);
+  border: 2px solid #222;
+  border-top: 4px solid #00f3ff;
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.8);
+  padding: 25px;
+  gap: 30px;
+  font-family: "Press Start 2P", monospace;
 }
 
-.loadout-card:hover {
-  border-color: #00f3ff;
-  box-shadow: 10px 10px 0px rgba(0, 243, 255, 0.2);
-  transform: translateX(10px);
+/* LEFT COLUMN: Name, Lvl, Portrait */
+.loadout-col-left {
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* ✨ SLEEK NAME & LEVEL BADGE */
+.name-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px dashed #555;
+  padding-bottom: 10px;
+}
+.name-header h3 {
+  color: #fff;
+  font-size: 12px;
+  margin: 0;
+  text-shadow: 2px 2px 0 #ff007c;
+  line-height: 1.2;
+}
+.hero-lvl-select {
+  appearance: none;
+  -webkit-appearance: none; /* Kills default arrow */
+  background: #ff007c;
+  color: #fff;
+  border: none;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  padding: 4px 6px;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 2px 2px 0 #000;
+}
+.hero-lvl-select:hover {
+  background: #fff;
+  color: #ff007c;
 }
 
 .loadout-portrait {
+  border: 2px solid #333;
+  height: 180px;
+  width: 100%;
   background: #000;
-  border: 2px solid #555;
-  flex-shrink: 0;
-  height: 140px;
   position: relative;
-  width: 140px;
 }
-
+.loadout-portrait::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
 .loadout-portrait img {
-  filter: contrast(1.1);
+  width: 100%;
   height: 100%;
   object-fit: cover;
-  width: 100%;
+  filter: contrast(1.1);
 }
 
-/* Adds a neat little scanline over the portraits */
-.loadout-portrait::after {
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 243, 255, 0.1),
-    rgba(0, 243, 255, 0.1) 2px,
-    transparent 2px,
-    transparent 4px
-  );
-  content: "";
-  inset: 0;
-  pointer-events: none;
-  position: absolute;
-}
-
-.loadout-details {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.loadout-header {
-  align-items: flex-end;
-  border-bottom: 2px dashed #333;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-}
-
-.loadout-header h3 {
-  color: #00f3ff;
-  font-family: "Press Start 2P", monospace;
-  font-size: 28px;
-  margin: 0;
-  text-shadow: 2px 2px 0 #000;
-}
-
-select.loadout-lvl {
-  background: #111;
-  border: 2px solid #444;
-  color: #fcee0a;
-  font-family: "Press Start 2P", monospace;
-  font-size: 16px;
-  padding: 4px 10px;
-  cursor: pointer;
-  appearance: none;
-  text-align: center;
-}
-
-select.loadout-lvl:focus {
-  outline: none;
-  border-color: #00f3ff;
-  color: #00f3ff;
-}
-
-select.loadout-lvl option {
-  background: #000;
-  color: #fcee0a;
-}
-
-/* Stat formatting */
 .loadout-stats {
-  color: #aaa;
-  display: flex;
-  font-size: 22px;
-  gap: 30px;
-  margin-bottom: 15px;
+  background: rgba(0, 243, 255, 0.05);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  border-left: 3px solid #00f3ff;
+  padding: 12px;
+  font-size: 9px;
+  line-height: 2;
+  color: #ddd;
 }
-
-.stat-row {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-}
-
-.stat-row span:first-child {
-  color: #fff;
-}
-
 .stat-bonus {
   color: #00f3ff;
-  font-weight: bold;
-  text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
-  display: inline-block;
+  text-shadow: 1px 1px 0 #000;
+  margin-left: 5px;
 }
 
-/* The UI Flash Animation */
-.flash-stat {
-  animation: statFlash 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes statFlash {
-  0% {
-    transform: scale(1.5) translateX(5px);
-    color: #fff;
-    text-shadow: 0 0 20px #fff;
-  }
-  100% {
-    transform: scale(1) translateX(0);
-    color: #00f3ff;
-    text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
-  }
-}
-
-/* Equipment Terminal Panel */
-.loadout-equip-section {
-  background: #050508;
-  border: 1px solid #333;
+/* MAIN COLUMN: Equipment Grid */
+.loadout-col-main {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 10px 15px;
+  gap: 20px;
+}
+.equip-grid {
+  display: flex;
+  gap: 20px;
+}
+.grid-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.equip-label {
+/* MODULE STYLING */
+.hud-module {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #222;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+.hud-label {
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  background: #050508;
+  font-size: 8px;
+  padding: 0 5px;
+  text-shadow: 1px 1px 0 #000;
+}
+.label-traces {
   color: #ff007c;
-  font-family: "Press Start 2P", monospace;
-  font-size: 10px;
 }
-
-.lc-select {
-  background: transparent;
-  border: none;
-  border-bottom: 2px dashed #ff007c;
+.label-lc {
   color: #fcee0a;
-  cursor: pointer;
-  font-family: "VT323", monospace;
-  font-size: 24px;
-  padding: 5px 0;
-  transition: all 0.2s;
-  width: 100%;
 }
-
-.lc-select:focus {
-  background: rgba(0, 243, 255, 0.1);
-  border-bottom: 2px solid #00f3ff;
+.label-relics {
   color: #00f3ff;
-  outline: none;
 }
 
-.lc-select option {
-  background: #000;
-  color: #fff;
-  font-family: "VT323", monospace;
-}
-
-.lc-sub-settings {
-  align-items: center;
-  background: #111;
-  border: 1px solid #333;
+/* ✨ HUD DATA-PILLS (Goodbye Tax Form Select Boxes) */
+.hud-row {
   display: flex;
   gap: 8px;
-  padding: 5px 10px;
-}
-
-.lc-sub-settings select {
-  background: #000;
-  border: 1px solid #00f3ff;
-  color: #00f3ff;
-  cursor: pointer;
-  font-family: "VT323", monospace;
-  font-size: 16px;
-  padding: 2px 5px;
-}
-
-.lc-sub-settings select:focus {
-  background: #00f3ff;
-  color: #000;
-  outline: none;
-}
-
-.lc-equip-row {
-  display: flex;
-  gap: 15px;
-  align-items: flex-start;
-  margin-top: 5px;
-}
-
-.lc-image-container {
-  width: 70px;
-  flex-shrink: 0;
-}
-
-.lc-portrait {
+  align-items: center;
   width: 100%;
-  aspect-ratio: 5 / 7;
-  object-fit: cover;
-  border: 3px solid #ffffff;
-  box-shadow: 4px 4px 0 #000;
-  background: #111;
-  display: block;
+  flex-wrap: wrap;
+}
+.hud-row span {
+  font-size: 8px;
+  color: #777;
+  width: 35px;
 }
 
-.btn-info {
-  background: transparent;
-  color: #00f3ff;
-  border: 1px dashed #00f3ff;
-  font-family: "Press Start 2P", monospace;
-  font-size: 10px;
-  cursor: pointer;
-  margin-left: auto;
+.hud-select {
+  appearance: none;
+  -webkit-appearance: none; /* Kills default arrow completely */
+  background: #0a0a0e;
+  border: 1px solid #333;
+  border-bottom: 2px solid #555;
+  color: #fff;
   padding: 6px 8px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  outline: none;
+  cursor: pointer;
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: all 0.2s;
 }
-
-.btn-info:hover {
-  background: #00f3ff;
-  color: #000;
+.hud-select:hover {
+  background: #111;
+  border-color: #777;
+  border-bottom-color: #aaa;
+}
+.hud-select:focus {
+  border-color: #fff;
+  border-bottom-color: #fff;
+  box-shadow: 0 5px 10px rgba(255, 255, 255, 0.1);
+  z-index: 10;
+  transform: translateY(-1px);
 }
 
-.lc-desc-box {
-  margin-top: 10px;
-  background: #050508;
-  border: 1px dashed #ff007c;
-  padding: 12px;
-  font-size: 18px;
-  color: #ccc;
-  line-height: 1.4;
-  text-shadow: 1px 1px 0 #000;
-  animation: blackoutIn 0.2s forwards;
+/* Color Highlights for Data-Pills */
+.box-traces .hud-select:focus {
+  border-bottom-color: #ff007c;
+  color: #ff007c;
 }
-
-.lc-highlight {
+.box-lc .hud-select {
+  border-bottom-color: rgba(252, 238, 10, 0.4);
+}
+.box-lc .hud-select:focus {
+  border-bottom-color: #fcee0a;
+  color: #fcee0a;
+}
+.box-relics .hud-select {
+  border-bottom-color: rgba(0, 243, 255, 0.4);
+}
+.box-relics .hud-select:focus {
+  border-bottom-color: #00f3ff;
   color: #00f3ff;
-  text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
-  font-weight: bold;
+}
+
+/* Widescreen Relic Desc Monitor */
+.hud-monitor {
+  background: #020202;
+  border: 1px solid #333;
+  border-top: 2px solid #00f3ff;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 243, 255, 0.03),
+    rgba(0, 243, 255, 0.03) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+.lc-monitor-half {
+  flex: 1;
+  border-right: 1px dashed #333;
+  padding-right: 20px;
+  font-size: 8px;
+  line-height: 1.8;
+  color: #ccc;
+}
+.relic-monitor-half {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.relic-desc-item {
+  font-size: 8px;
+  line-height: 1.8;
+  color: #ccc;
+  background: rgba(0, 243, 255, 0.05);
+  padding: 8px;
+  border-left: 2px solid;
+}
+.loadout-control-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-bottom: -15px; /* Pulls it closer to the first character card */
 }

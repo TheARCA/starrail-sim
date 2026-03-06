@@ -1,6 +1,6 @@
 export const march_7th_preservation = {
   id: "march_7th_preservation",
-  name: "March 7th: Preservation",
+  name: "March 7th",
   imageSrc: "img/chars/march7th_1.webp",
   type: "ice",
   path: "preservation",
@@ -29,15 +29,11 @@ export const march_7th_preservation = {
 
   onBattleStart: function (squad) {
     if (this.eidolon >= 2) {
-      let target = squad[0]; // Explicitly default to the 1st slot!
-
-      // Check if ANY hero is actually missing HP
+      let target = squad[0];
       const isAnyoneInjured = squad.some((hero) => hero.hp < hero.baseHp);
 
-      // If someone is injured, find the one with the lowest percentage
       if (isAnyoneInjured) {
         let lowestHpPct = target.hp / target.baseHp;
-
         for (let i = 1; i < squad.length; i++) {
           const pct = squad[i].hp / squad[i].baseHp;
           if (pct < lowestHpPct) {
@@ -47,17 +43,29 @@ export const march_7th_preservation = {
         }
       }
 
-      // Apply the shield to the chosen target
       target.shield = this.baseDef * 0.24 + 320;
       target.shieldDuration = 3;
-      target.shieldSource = this.id; // Track who gave the shield for E6!
+      target.shieldSource = this.id;
     }
   },
 
+  // ✨ INTEGRATED SYSTEM: Energy Regeneration Math (E1)
   onFreeze: function (target) {
     if (this.eidolon >= 1) {
-      this.energy = Math.min(this.maxEnergy, this.energy + 6);
+      return { type: "energy", amount: 6 };
     }
+  },
+
+  onAllyTurnStart: function (ally) {
+    if (this.eidolon >= 6 && ally.shield > 0 && ally.shieldSource === this.id) {
+      return {
+        type: "heal",
+        baseAmount: ally.baseHp * 0.04,
+        flatAmount: 106,
+        text: `>_ E6 RECOVERY:`,
+      };
+    }
+    return null;
   },
 
   getButtonUI: function () {
@@ -79,7 +87,8 @@ export const march_7th_preservation = {
         type: "single",
         genSP: 1,
         genEN: 20,
-        multiplier: 0.5,
+        // ✨ DYNAMIC: Scales based on the Loadout Trace Level!
+        multiplier: 0.5 + (this.basicLvl || 1) * 0.1,
         toughnessDamage: 10,
         logText: `>_ FROST ARROW:`,
         vfx: "fx-ice-arrow",
@@ -90,14 +99,17 @@ export const march_7th_preservation = {
         "With me out here, how can we lose~",
         "Stay right there while I give you a present~",
       ];
-
       this.state.countersThisTurn = 0;
+
+      // ✨ DYNAMIC: Shield scales perfectly with Trace Level
+      const defPct = 0.38 + (this.skillLvl || 1) * 0.019;
+      const flatShield = 190 + (this.skillLvl || 1) * 57;
 
       return {
         type: "shield",
         costSP: 1,
         genEN: 30,
-        shieldValue: this.baseDef * 0.48 + 160,
+        shieldValue: this.baseDef * defPct + flatShield,
         duration: 3,
         aggroModThreshold: 0.3,
         aggroModValue: 5,
@@ -109,9 +121,12 @@ export const march_7th_preservation = {
         type: "all",
         hits: 4,
         costEN: 120,
-        multiplier: 1.5,
+        // ✨ DYNAMIC: Scales up to 150% ATK at Lv 10
+        multiplier: 0.9 + (this.ultLvl || 1) * 0.06,
         toughnessDamage: 20,
-        chanceToFreeze: 0.5,
+        // ✨ INTEGRATED SYSTEM: Bumped to 65% (A6 Trace included) for the EHR Math!
+        baseChanceToApply: 0.65,
+        debuffType: "freeze",
         logText: `>_ ULTIMATE: GLACIAL CASCADE!`,
         vfx: "fx-ice-explosion",
         voiceline: "Check out this awesome move~",
@@ -125,7 +140,8 @@ export const march_7th_preservation = {
       return {
         name: "GIRL POWER",
         type: "single",
-        multiplier: 0.5,
+        // ✨ DYNAMIC: Scales up to 100% ATK at Lv 10
+        multiplier: 0.5 + (this.talentLvl || 1) * 0.05,
         flatDamageBonus: this.eidolon >= 4 ? this.baseDef * 0.3 : 0,
         toughnessDamage: 10,
         logText: `>_ GIRL POWER (COUNTER):`,

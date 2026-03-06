@@ -49,7 +49,6 @@
 }
 
 /* --- PORTRAITS --- */
-/* Lighter Monitor Overlay */
 .portrait-frame {
   aspect-ratio: 1 / 1;
   background: #0a0a0e;
@@ -57,6 +56,38 @@
   overflow: hidden;
   position: relative;
   width: 100%;
+}
+
+/* ✨ NEW: Glowing CRT Scanline */
+.portrait-frame::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0; /* ✨ FIXED: Forces the scanline to start at the left edge! */
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  z-index: 5;
+  animation: crtScanline 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes crtScanline {
+  0% {
+    top: -10px;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
 }
 
 .portrait-frame::after {
@@ -90,6 +121,25 @@
   height: 100%;
   object-fit: cover;
   width: 100%;
+  /* ✨ NEW: Idle Breathing Animation */
+  animation: idleBreathe 4s ease-in-out infinite alternate;
+}
+
+/* Offset the breathing so they don't all move perfectly in sync! */
+.character-card:nth-child(even) .portrait-frame img {
+  animation-delay: -2s;
+}
+.character-card:nth-child(3n) .portrait-frame img {
+  animation-delay: -1.3s;
+}
+
+@keyframes idleBreathe {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
 }
 
 /* --- STATS & BARS --- */
@@ -138,6 +188,61 @@
   border-right: 2px solid #ff99cc;
 }
 
+.bar-fill {
+  position: absolute; /* Ensures bars stack on top of each other */
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  transition: width 0.1s linear; /* ✨ Restored: Smooth sliding when HP changes */
+}
+
+.hp-fill,
+.en-fill,
+.toughness-fill,
+.toughness-preview {
+  z-index: 3;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  overflow: hidden; /* ✨ Keeps the glint inside the bar */
+}
+
+.hp-fill::after,
+.en-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: barGlint 3s infinite;
+}
+
+/* ✨ Restored: Delay the Energy bar glint so they sweep at different times! */
+.en-fill::after {
+  animation-delay: 1.5s;
+}
+
+@keyframes barGlint {
+  0% {
+    left: -100%;
+  }
+  20% {
+    left: 200%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
 .bar-text {
   color: #fff;
   font-size: 18px;
@@ -149,26 +254,11 @@
     1px 1px 0px #000,
     -1px -1px 0px #000,
     1px -1px 0px #000,
-    -1px 1px 0px #000; /* ✨ Crisp readable outline */
+    -1px 1px 0px #000;
   top: 0;
   width: 100%;
-  z-index: 5;
-}
-
-.bar-fill {
-  position: absolute; /* Ensures bars stack on top of each other */
-  top: 0;
-  left: 0;
-  height: 100%;
-}
-.hp-fill,
-.en-fill,
-.toughness-fill,
-.toughness-preview {
-  z-index: 3; /* Keep primary bars on top */
-}
-.bar-text {
-  z-index: 10 !important; /* Ensure numbers stay above the bars */
+  z-index: 20 !important; /* ✨ Forces the text above the liquid animations */
+  pointer-events: none; /* ✨ Ensures it doesn't block clicks */
 }
 .hp-ghost {
   background-color: #fff;

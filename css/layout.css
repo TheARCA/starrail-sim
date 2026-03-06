@@ -82,6 +82,24 @@ h1 {
   padding: 0;
 }
 
+.arena::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  /* A bright cyan wireframe grid */
+  background:
+    linear-gradient(rgba(0, 243, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 243, 255, 0.15) 1px, transparent 1px);
+  background-size: 50px 50px;
+  /* Tilts the grid away from the camera like a floor */
+  transform: perspective(600px) rotateX(70deg) translateY(-100px);
+  z-index: 0; /* Keep it strictly in the background */
+  pointer-events: none;
+}
+
 /* --- SQUAD POSITIONING --- */
 .squad-layout {
   align-items: flex-end;

@@ -121,6 +121,14 @@ export function calculateDamage(
   let atkBonus = 0;
   let dmgBonus = 0;
 
+  // ✨ NEW: Apply Elemental Damage Bonus from Relics!
+  if (attacker.isHero && attacker.type) {
+    const elementalKey = attacker.type + "DmgBonus"; // e.g., "lightningDmgBonus"
+    if (attacker[elementalKey]) {
+      dmgBonus += attacker[elementalKey];
+    }
+  }
+
   if (attacker.isHero && attacker.lightCone) {
     if (attacker.lightCone.getDynamicAtk)
       atkBonus += attacker.lightCone.getDynamicAtk(attacker);
@@ -351,4 +359,55 @@ export function calculateBreakDebuff(attacker, defender) {
     debuff.baseTickDamage = Math.floor(Math.max(0, debuff.baseTickDamage));
 
   return debuff;
+}
+
+export function calculateHealing(
+  healer,
+  target,
+  baseHealingStat,
+  flatHealing = 0,
+) {
+  // baseHealingStat is usually calculated in the character file (e.g., healer.maxHp * 0.05)
+  // Relics export outgoing healing as 'healing' (from relics.js)
+  const outgoingBoost = healer.healing || healer.outgoingHealingBoost || 0;
+  const incomingBoost = target.incomingHealingBoost || 0;
+  const incomingReduction = target.incomingHealingReduction || 0;
+
+  const healingBoostMultiplier =
+    1 + outgoingBoost + incomingBoost - incomingReduction;
+
+  // HealingAmount = (BaseHealing + FlatHealing) × HealingBoostMultiplier
+  const finalHeal = Math.floor(
+    (baseHealingStat + flatHealing) * Math.max(0, healingBoostMultiplier),
+  );
+
+  return finalHeal;
+}
+
+export function calculateEffectHitRate(attacker, defender, baseChance) {
+  // Base chance is usually 1.0 (100%), 0.6 (60%), etc.
+  const ehr = attacker.ehr || 0;
+
+  // Enemies usually have some base Effect RES (e.g., 0.2 for 20%)
+  const effRes = defender.effectRes || defender.effRes || 0;
+
+  // Specific immunities (like Boss freeze resistance)
+  const debuffRes = defender.debuffRes || 0;
+
+  // RealChance = BaseChance × (1 + EffectHitRate) × (1 - EffectRES) × (1 - DebuffRES)
+  const realChance = baseChance * (1 + ehr) * (1 - effRes) * (1 - debuffRes);
+
+  // Clamp between 0% and 100%
+  return Math.max(0, Math.min(realChance, 1));
+}
+
+export function calculateEnergyGain(character, baseEnergyGain) {
+  // EnergyRegenBonus comes from the Link Rope relic (usually 0.194 for 19.4%)
+  const energyRegenBonus = character.energyRegen || character.err || 0;
+
+  // RealEnergyGain = BaseEnergyGain × (1 + EnergyRegenBonus)
+  const finalEnergy = baseEnergyGain * (1 + energyRegenBonus);
+
+  // Energy in HSR is usually kept as a float (e.g., 30.5 energy)
+  return finalEnergy;
 }

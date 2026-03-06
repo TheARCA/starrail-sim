@@ -7,7 +7,7 @@
 .bottom-console {
   align-items: stretch;
   display: flex;
-  flex-direction: column; /* Stack log on top of buttons */
+  flex-direction: column;
   gap: 20px;
   margin: 0;
   max-width: 400px;
@@ -16,6 +16,17 @@
   bottom: 40px;
   right: 40px;
   z-index: 30;
+  /* ✨ NEW: Spring physics for sliding in and out */
+  transition:
+    transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    opacity 0.3s ease-in;
+}
+
+/* ✨ NEW: The state when enemies are attacking */
+.console-hidden {
+  transform: translateY(200px) rotate(5deg) scale(0.8);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .console-label {
@@ -63,17 +74,50 @@
 .action-basic {
   border-color: #00f3ff;
   box-shadow: 6px 6px 0px #005555;
+  animation: pulseBasicBtn 2s infinite alternate;
+}
+@keyframes pulseBasicBtn {
+  from {
+    box-shadow: 6px 6px 0px #005555;
+  }
+  to {
+    box-shadow:
+      6px 6px 0px #00a8a8,
+      inset 0 0 10px rgba(0, 243, 255, 0.2);
+  }
 }
 
 .action-skill {
   border-color: #fcee0a;
   box-shadow: 6px 6px 0px #555500;
   color: #fcee0a;
+  animation: pulseSkillBtn 2s infinite alternate;
+}
+@keyframes pulseSkillBtn {
+  from {
+    box-shadow: 6px 6px 0px #555500;
+  }
+  to {
+    box-shadow:
+      6px 6px 0px #a8a800,
+      inset 0 0 10px rgba(252, 238, 10, 0.2);
+  }
 }
 
 .action-ult {
   border-color: #ff007c;
   box-shadow: 6px 6px 0px #550022;
+  animation: pulseUltBtn 2s infinite alternate;
+}
+@keyframes pulseUltBtn {
+  from {
+    box-shadow: 6px 6px 0px #550022;
+  }
+  to {
+    box-shadow:
+      6px 6px 0px #a80055,
+      inset 0 0 10px rgba(255, 0, 124, 0.2);
+  }
 }
 
 .btn-action:hover:not(:disabled) {

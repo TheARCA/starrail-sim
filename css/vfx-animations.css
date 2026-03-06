@@ -876,7 +876,7 @@
 }
 
 .fx-lock-on {
-  animation: pulse 0.5s ease-out forwards;
+  animation: lockPulse 0.5s ease-out forwards;
   background: radial-gradient(
     circle,
     transparent 40%,
@@ -890,11 +890,11 @@
 
 /* UI Crosshair over the character portrait */
 .character-card.is-locked-on {
-  box-shadow: 0 0 15px 3px rgba(255, 0, 85, 0.6);
+  box-shadow: 0 0 15px 3px rgba(255, 0, 85, 0.6) !important;
   border-color: #ff0055;
 }
 
-.character-card.is-locked-on .portrait-frame::before {
+.character-card.is-locked-on .stats-box::before {
   content: "[ L O C K ]";
   position: absolute;
   top: 0px;
@@ -907,10 +907,31 @@
   border-bottom: 2px solid #ff0055;
   border-left: 2px solid #ff0055;
   padding: 4px 6px;
-  z-index: 10;
-  animation: pulse 1s infinite;
+  z-index: 50;
+  animation: lockPulseUI 1s infinite alternate;
   text-shadow: 0 0 8px #ff0055;
   letter-spacing: 1px;
+}
+
+@keyframes lockPulse {
+  0% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes lockPulseUI {
+  0% {
+    filter: brightness(1);
+  }
+  100% {
+    filter: brightness(1.5);
+    text-shadow: 0 0 15px #ff0055;
+  }
 }
 
 @keyframes shakePixel {

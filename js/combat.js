@@ -1,13 +1,15 @@
 import { enemyDatabase } from "./enemies.js";
 import { heroDatabase } from "./heroes.js";
 import { lightconeDatabase } from "./lightcones.js";
-
-// ✨ IMPORTED SYSTEMS
+import { compileRelicStats, relicSets } from "./relics.js";
 import { playSFX } from "./audio.js";
 import {
   calculateDamage,
   calculateBreakDamage,
   calculateBreakDebuff,
+  calculateEffectHitRate,
+  calculateEnergyGain,
+  calculateHealing,
 } from "./math.js";
 import { playVisualEffect, triggerAnimation, animateSP } from "./vfx.js";
 import { handleKeyboardInput } from "./input.js";
@@ -159,6 +161,34 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
       finalDef += lc.stats[lcLvl].def;
     }
 
+    // ✨ NEW: PROCESS RELIC STATS
+    let compiledRelics = {
+      hpPct: 0,
+      atkPct: 0,
+      defPct: 0,
+      hpFlat: 0,
+      atkFlat: 0,
+      defFlat: 0,
+      spd: 0,
+      critRate: 0,
+      critDmg: 0,
+      ehr: 0,
+      breakEffect: 0,
+    };
+
+    if (saveData.relics) {
+      compiledRelics = compileRelicStats(saveData.relics);
+    }
+
+    // ✨ NEW: HSR Base Math Formula
+    const combatHp =
+      finalHp * (1 + compiledRelics.hpPct) + compiledRelics.hpFlat;
+    const combatAtk =
+      finalAtk * (1 + compiledRelics.atkPct) + compiledRelics.atkFlat;
+    const combatDef =
+      finalDef * (1 + compiledRelics.defPct) + compiledRelics.defFlat;
+    const combatSpd = (inst?.spd || hero.spd || 100) + compiledRelics.spd;
+
     const inst = {
       ...hero,
       state: { ...hero.state },
@@ -173,13 +203,30 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
         ? lightconeDatabase[saveData.equippedLightCone]
         : null,
       lcState: {},
-      baseHp: finalHp,
-      hp: finalHp,
-      baseAtk: finalAtk,
-      baseDef: finalDef,
+
+      // ✨ Injected Relic Math
+      baseHp: combatHp,
+      hp: combatHp,
+      baseAtk: combatAtk,
+      baseDef: combatDef,
+      spd: combatSpd,
+      baseSpd: combatSpd,
+
+      critRate: (hero.critRate || 0.05) + compiledRelics.critRate,
+      critDmg: (hero.critDmg || 0.5) + compiledRelics.critDmg,
+      breakEffect: (hero.breakEffect || 0) + compiledRelics.breakEffect,
+      ehr: (hero.ehr || 0) + compiledRelics.ehr,
+
+      // Elemental Damage Injections
+      physicalDmgBonus: compiledRelics.physicalDmg || 0,
+      fireDmgBonus: compiledRelics.fireDmg || 0,
+      iceDmgBonus: compiledRelics.iceDmg || 0,
+      lightningDmgBonus: compiledRelics.lightningDmg || 0,
+      windDmgBonus: compiledRelics.windDmg || 0,
+      quantumDmgBonus: compiledRelics.quantumDmg || 0,
+      imaginaryDmgBonus: compiledRelics.imaginaryDmg || 0,
+
       energy: 0,
-      critRate: hero.critRate || 0.05,
-      critDmg: hero.critDmg || 0.5,
       shield: 0,
       shieldDuration: 0,
       aggroModifier: 0,
@@ -188,10 +235,37 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
       isUltQueued: false,
       uid: `hero_${id}_${i}`,
     };
+
+    const pRelics = saveData.relics;
+    if (pRelics) {
+      // 1. Apply Planar Set
+      if (pRelics.planarSet && relicSets[pRelics.planarSet]) {
+        if (relicSets[pRelics.planarSet].apply2P)
+          relicSets[pRelics.planarSet].apply2P(inst);
+      }
+
+      // 2. Apply Relic 1 (2P)
+      if (pRelics.relicSet1 && relicSets[pRelics.relicSet1]) {
+        if (relicSets[pRelics.relicSet1].apply2P)
+          relicSets[pRelics.relicSet1].apply2P(inst);
+      }
+
+      // 3. Apply Relic 2 (2P)
+      if (pRelics.relicSet2 && relicSets[pRelics.relicSet2]) {
+        if (relicSets[pRelics.relicSet2].apply2P)
+          relicSets[pRelics.relicSet2].apply2P(inst);
+      }
+
+      // 4. The 4-Piece Checker! If Slot 1 and Slot 2 match, grant the 4P Bonus!
+      if (pRelics.relicSet1 && pRelics.relicSet1 === pRelics.relicSet2) {
+        if (relicSets[pRelics.relicSet1].apply4P)
+          relicSets[pRelics.relicSet1].apply4P(inst);
+      }
+    }
+
     if (inst.init) inst.init();
     if (inst.lightCone && inst.lightCone.init) inst.lightCone.init(inst);
-    inst.spd = inst.spd || 100;
-    inst.baseSpd = inst.spd;
+
     inst.av = 10000 / inst.spd;
     playerSquad.push(inst);
   });
@@ -286,28 +360,39 @@ function advanceTurn() {
   renderQueue();
 
   if (activeEntity.isHero) {
-    if (targetEnemyIndex >= enemySquad.length)
-      targetEnemyIndex = Math.max(0, enemySquad.length - 1);
-    targetHeroIndex = playerSquad.indexOf(activeEntity);
+    // ✨ INTEGRATED: Ally Turn Start Hooks (March 7th E6 Healing)
+    playerSquad.forEach((hero) => {
+      if (hero.onAllyTurnStart && hero.hp > 0) {
+        const effect = hero.onAllyTurnStart(activeEntity);
+        if (effect && effect.type === "heal") {
+          // combat.js does the math!
+          const finalHeal = calculateHealing(
+            hero,
+            activeEntity,
+            effect.baseAmount,
+            effect.flatAmount,
+          );
+          activeEntity.hp = Math.min(
+            activeEntity.baseHp,
+            activeEntity.hp + finalHeal,
+          );
 
-    if (activeEntity.shield > 0 && activeEntity.shieldSource === "march") {
-      const march = playerSquad.find((h) => h.id === "march" && h.eidolon >= 6);
-      if (march) {
-        const heal = Math.floor(activeEntity.baseHp * 0.04 + 106);
-        activeEntity.hp = Math.min(activeEntity.baseHp, activeEntity.hp + heal);
-
-        const hIdx = playerSquad.indexOf(activeEntity);
-        playVisualEffect(`hero-card-${hIdx}`, "heal", heal);
-        triggerAnimation(
-          document.getElementById(`hero-card-${hIdx}`),
-          "heal-flash",
-        );
+          // Visuals!
+          const hIdx = playerSquad.indexOf(activeEntity);
+          playVisualEffect(`hero-card-${hIdx}`, "heal", finalHeal);
+          triggerAnimation(
+            document.getElementById(`hero-card-${hIdx}`),
+            "heal-flash",
+          );
+          showVoiceline("SYSTEM", `${effect.text} HEALED FOR ${finalHeal}`);
+        }
       }
-    }
+    });
 
-    if (activeEntity.lightCone && activeEntity.lightCone.onTurnStart) {
-      activeEntity.lightCone.onTurnStart(activeEntity);
-    }
+    if (targetEnemyIndex >= enemySquad.length)
+      if (activeEntity.lightCone && activeEntity.lightCone.onTurnStart) {
+        activeEntity.lightCone.onTurnStart(activeEntity);
+      }
 
     if (activeEntity.shieldDuration > 0) {
       activeEntity.shieldDuration--;
@@ -802,8 +887,20 @@ function executeEnemyTurn(enemy, i) {
     }
 
     t.h.hp = Math.max(t.h.hp - dmg, 0);
-    if (move.energyGain)
-      t.h.energy = Math.min(t.h.maxEnergy, t.h.energy + move.energyGain);
+
+    if (t.h.hasStreetwiseBoxing4P) {
+      t.h.state.streetwiseBoxingStacks = Math.min(
+        5,
+        (t.h.state.streetwiseBoxingStacks || 0) + 1,
+      );
+    }
+
+    if (t.h.hp > 0) {
+      // Base 10 energy for getting hit, plus whatever the enemy move specifies
+      const baseHitEnergy = 10 + (move.energyGain || 0);
+      const finalHitEnergy = calculateEnergyGain(t.h, baseHitEnergy);
+      t.h.energy = Math.min(t.h.maxEnergy, t.h.energy + finalHitEnergy);
+    }
 
     if (move.onHit) move.onHit(t.h, true, playerSquad);
 
@@ -1173,7 +1270,6 @@ function renderHeroSquad() {
           </div>
           <div class="bar-container en-bar-cont" style="border-color:#ff007c">
             <div class="bar-fill en-ghost"></div> <div class="bar-fill en-fill"></div>
-            <div class="bar-text"></div>
           </div>
           <div class="passive-track"></div>
         </div>`;
@@ -1226,7 +1322,6 @@ function renderHeroSquad() {
     const enPct = (hero.energy / hero.maxEnergy) * 100;
     card.querySelector(".en-fill").style.width = `${enPct}%`;
     card.querySelector(".en-ghost").style.width = `${enPct}%`;
-    card.querySelectorAll(".bar-text")[1].innerText = Math.floor(hero.energy);
 
     // ✨ UI STATE TRIGGERS
     const ultCost = hero.getButtonUI().ult.costEN || 120;
@@ -1479,11 +1574,15 @@ function executePlayerAction(actionType) {
   else if (actualGen > 0) animateSP(`hero-card-${heroIndex}`, "gain");
 
   partySP = Math.min(Math.max(partySP - actualCost + actualGen, 0), MAX_SP);
+
+  const baseEnergyToGain = move.genEN ?? uiData[actionKey].genEN ?? 0;
+  const finalEnergyGained = calculateEnergyGain(currentHero, baseEnergyToGain);
+
   currentHero.energy = Math.min(
     Math.max(
       currentHero.energy -
         (move.costEN ?? uiData[actionKey].costEN ?? 0) +
-        (move.genEN ?? uiData[actionKey].genEN ?? 0),
+        finalEnergyGained,
       0,
     ),
     currentHero.maxEnergy,
@@ -1629,6 +1728,13 @@ function executePlayerAction(actionType) {
         currentHero.lightCone.onAttack
       )
         currentHero.lightCone.onAttack(currentHero);
+
+      if (currentHitCount === 0 && currentHero.hasStreetwiseBoxing4P) {
+        currentHero.state.streetwiseBoxingStacks = Math.min(
+          5,
+          (currentHero.state.streetwiseBoxingStacks || 0) + 1,
+        );
+      }
 
       let isHeavyHit = false;
 
@@ -1787,8 +1893,31 @@ function executePlayerAction(actionType) {
         }
 
         if (currentHitCount === hits - 1) {
-          if (move.chanceToFreeze && Math.random() < move.chanceToFreeze)
-            t.e.state.isFrozen = true;
+          // ✨ INTEGRATED: Effect Hit Rate Math
+          if (move.baseChanceToApply && move.debuffType === "freeze") {
+            const realChance = calculateEffectHitRate(
+              currentHero,
+              t.e,
+              move.baseChanceToApply,
+            );
+            if (Math.random() < realChance) {
+              t.e.state.isFrozen = true;
+              if (currentHero.onFreeze) {
+                const freezeFx = currentHero.onFreeze(t.e);
+                if (freezeFx && freezeFx.type === "energy") {
+                  const enGain = calculateEnergyGain(
+                    currentHero,
+                    freezeFx.amount,
+                  );
+                  currentHero.energy = Math.min(
+                    currentHero.maxEnergy,
+                    currentHero.energy + enGain,
+                  );
+                }
+              }
+            }
+          }
+
           if (move.onHit) move.onHit(t.e, t.main, playerSquad);
 
           if (currentHero.lightCone && currentHero.lightCone.onHit) {
@@ -2005,6 +2134,13 @@ function executeCounter(hero, move, eIdx, onComplete) {
         hero.lightCone.onAttack(hero);
       }
 
+      if (currentHitCount === 0 && hero.hasStreetwiseBoxing4P) {
+        hero.state.streetwiseBoxingStacks = Math.min(
+          5,
+          (hero.state.streetwiseBoxingStacks || 0) + 1,
+        );
+      }
+
       const livingEnemiesCount = enemySquad.filter((e) => e.hp > 0).length;
 
       // ✨ UPDATED: Apply the hit ratio to the FUA damage math!
@@ -2190,4 +2326,17 @@ document.addEventListener("keydown", (e) => {
   };
 
   handleKeyboardInput(e, combatState, combatFunctions);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Alt") {
+    e.preventDefault(); // Stop the browser menu from opening
+    document.body.classList.add("show-cursor");
+  }
+});
+
+document.addEventListener("keyup", (e) => {
+  if (e.key === "Alt") {
+    document.body.classList.remove("show-cursor");
+  }
 });
