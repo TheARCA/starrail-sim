@@ -187,7 +187,7 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
       finalAtk * (1 + compiledRelics.atkPct) + compiledRelics.atkFlat;
     const combatDef =
       finalDef * (1 + compiledRelics.defPct) + compiledRelics.defFlat;
-    const combatSpd = (inst?.spd || hero.spd || 100) + compiledRelics.spd;
+    const combatSpd = (hero.spd || 100) + compiledRelics.spd;
 
     const inst = {
       ...hero,
@@ -2340,3 +2340,4 @@ document.addEventListener("keyup", (e) => {
     document.body.classList.remove("show-cursor");
   }
 });
+
