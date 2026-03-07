@@ -181,7 +181,117 @@ function updateRelicDescriptions(heroId) {
   }
   descBox.innerHTML =
     html ||
-    "<div style='color:#555; font-size: 8px;'>/// NO SET BONUSES ACTIVE ///</div>";
+    "<div style='color:#FFF; font-size: 8px;'>/// NO SET BONUSES ACTIVE ///</div>";
+}
+
+function generateStatsHTML(hero, saveState) {
+  // 1. Get Base Data
+  const lvl = saveState.level || 1;
+  const lcId = saveState.equippedLightCone;
+  const lcLvl = saveState.lcLevel || 1;
+  const lcSi = saveState.lcSuperimposition || 1; // ✨ NEW: Grab Superimposition!
+  const lc = lcId ? lightconeDatabase[lcId] : null;
+
+  // 2. Calculate Base Stats (Hero Base + Light Cone Base)
+  const baseHp =
+    (hero.stats[lvl]?.hp || 0) + (lc ? lc.stats[lcLvl]?.hp || 0 : 0);
+  const baseAtk =
+    (hero.stats[lvl]?.atk || 0) + (lc ? lc.stats[lcLvl]?.atk || 0 : 0);
+  const baseDef =
+    (hero.stats[lvl]?.def || 0) + (lc ? lc.stats[lcLvl]?.def || 0 : 0);
+  const baseSpd = hero.spd || 100;
+
+  const baseCritRate = hero.critRate || 0.05;
+  const baseCritDmg = hero.critDmg || 0.5;
+
+  // 3. Get Relic Totals
+  const totals = compileRelicStats(saveState.relics);
+
+  // ✨ NEW: SIMULATE BOTH RELIC SETS AND LIGHT CONE PASSIVES
+  let mockHero = {
+    spd: baseSpd + (totals.spd || 0),
+    hpPctBonus: 0,
+    atkPctBonus: 0,
+    defPctBonus: 0,
+    spdPctBonus: 0,
+    critRateBonus: 0,
+    critDmgBonus: 0,
+    // Add extra stats just in case a Light Cone boosts them!
+    ehrBonus: 0,
+    effectResBonus: 0,
+    breakEffectBonus: 0,
+    energyRegenBonus: 0,
+    healingBonus: 0,
+  };
+
+  // ✨ APPLY LIGHT CONE PASSIVE!
+  if (lc && lc.onEquip) {
+    lc.onEquip(mockHero, lcSi);
+  }
+
+  // Apply Relic set bonuses
+  const r1 = saveState.relics?.relicSet1;
+  const r2 = saveState.relics?.relicSet2;
+  const p = saveState.relics?.planarSet;
+
+  let setCounts = {};
+  if (r1) setCounts[r1] = (setCounts[r1] || 0) + 1;
+  if (r2) setCounts[r2] = (setCounts[r2] || 0) + 1;
+
+  for (const [setId, count] of Object.entries(setCounts)) {
+    const setObj = relicSets[setId];
+    if (setObj && setObj.apply2P) setObj.apply2P(mockHero);
+    if (count === 2 && setObj && setObj.apply4P) setObj.apply4P(mockHero);
+  }
+  if (p && relicSets[p] && relicSets[p].apply2P) {
+    relicSets[p].apply2P(mockHero);
+  }
+
+  // Add all the injected mock bonuses to our final mathematical totals
+  totals.hpPct = (totals.hpPct || 0) + mockHero.hpPctBonus;
+  totals.atkPct = (totals.atkPct || 0) + mockHero.atkPctBonus;
+  totals.defPct = (totals.defPct || 0) + mockHero.defPctBonus;
+  totals.spdPct = (totals.spdPct || 0) + mockHero.spdPctBonus;
+  totals.critRate = (totals.critRate || 0) + mockHero.critRateBonus;
+  totals.critDmg = (totals.critDmg || 0) + mockHero.critDmgBonus;
+
+  // 4. Calculate Final Bonus Stats (Base * Pct) + Flat
+  const bonusHp =
+    Math.floor(baseHp * (totals.hpPct || 0)) + (totals.hpFlat || 0);
+  const bonusAtk =
+    Math.floor(baseAtk * (totals.atkPct || 0)) + (totals.atkFlat || 0);
+  const bonusDef =
+    Math.floor(baseDef * (totals.defPct || 0)) + (totals.defFlat || 0);
+  const bonusSpd =
+    Math.floor(baseSpd * (totals.spdPct || 0)) + (totals.spd || 0);
+
+  const bonusCritRate = totals.critRate || 0;
+  const bonusCritDmg = totals.critDmg || 0;
+
+  // Helper function to format rows
+  const formatRow = (label, base, bonus, isPercent = false) => {
+    const total = base + bonus;
+    let displayTotal = isPercent
+      ? `${(total * 100).toFixed(1)}%`
+      : Math.floor(total);
+    let displayBonus = isPercent
+      ? `${(bonus * 100).toFixed(1)}%`
+      : Math.floor(bonus);
+
+    const bonusHtml =
+      bonus > 0 ? `<span class="stat-bonus">(+${displayBonus})</span>` : "";
+    return `<div class="stat-row">${label} <span>${displayTotal} ${bonusHtml}</span></div>`;
+  };
+
+  // 5. Generate the HTML block
+  return `
+    ${formatRow("HP", baseHp, bonusHp)}
+    ${formatRow("ATK", baseAtk, bonusAtk)}
+    ${formatRow("DEF", baseDef, bonusDef)}
+    ${formatRow("SPEED", baseSpd, bonusSpd)}
+    ${formatRow("CRIT RATE", baseCritRate, bonusCritRate, true)}
+    ${formatRow("CRIT DMG", baseCritDmg, bonusCritDmg, true)}
+  `;
 }
 
 export function showLoadoutScreen() {
@@ -292,6 +402,30 @@ export function showLoadoutScreen() {
         )
         .join("");
 
+    const STAT_LABELS = {
+      hpFlat: "HP",
+      atkFlat: "ATK",
+      defFlat: "DEF",
+      hpPct: "HP %",
+      atkPct: "ATK %",
+      defPct: "DEF %",
+      spd: "SPEED",
+      critRate: "CRIT RATE",
+      critDmg: "CRIT DMG",
+      ehr: "EHR",
+      effectRes: "EFFECT RES",
+      breakEffect: "BREAK EFFECT",
+      energyRegen: "ENERGY REGEN",
+      healing: "HEALING BOOST",
+      physicalDmg: "PHYS DMG",
+      fireDmg: "FIRE DMG",
+      iceDmg: "ICE DMG",
+      lightningDmg: "LIGHTNING DMG",
+      windDmg: "WIND DMG",
+      quantumDmg: "QUANTUM DMG",
+      imaginaryDmg: "IMAGINARY DMG",
+    };
+
     const mBody = [
       "hpPct",
       "atkPct",
@@ -330,8 +464,15 @@ export function showLoadoutScreen() {
       "breakEffect",
     ];
 
-    // ✨ NEW: Automate the Relic Dropdowns!
-    // If a set has a 'desc4P', it goes in the Relic slots. If it doesn't, it's a Planar!
+    // Helper to generate options with the [ NONE ] default
+    const generateOpts = (arr, selectedVal) => {
+      return arr
+        .map(
+          (s) =>
+            `<option value="${s}" ${selectedVal === s ? "selected" : ""}>${STAT_LABELS[s]}</option>`,
+        )
+        .join("");
+    };
     const generateRelicOpts = (selected) => {
       let html = `<option value="">[ RELIC SLOT ]</option>`;
       Object.entries(relicSets).forEach(([id, set]) => {
@@ -362,13 +503,8 @@ export function showLoadoutScreen() {
         
         <div class="loadout-portrait"><img src="${hero.imageSrc}"></div>
         
-        <div class="loadout-stats">
-          <div>HP: <span id="base-hp-${hero.id}"></span><span class="stat-bonus" id="bonus-hp-${hero.id}"></span></div>
-          <div>ATK: <span id="base-atk-${hero.id}"></span><span class="stat-bonus" id="bonus-atk-${hero.id}"></span></div>
-          <div>DEF: <span id="base-def-${hero.id}"></span><span class="stat-bonus" id="bonus-def-${hero.id}"></span></div>
-          <div>SPD: <span id="base-spd-${hero.id}"></span><span class="stat-bonus" id="bonus-spd-${hero.id}"></span></div>
-          <div>CRIT: <span id="base-cr-${hero.id}"></span><span class="stat-bonus" id="bonus-cr-${hero.id}"></span></div>
-          <div>CDMG: <span id="base-cd-${hero.id}"></span><span class="stat-bonus" id="bonus-cd-${hero.id}"></span></div>
+        <div class="loadout-stats" id="stats-panel-${hero.id}">
+          ${generateStatsHTML(hero, rel)}
         </div>
       </div>
 
@@ -417,25 +553,49 @@ export function showLoadoutScreen() {
               </select>
               
               <div class="hud-row">
-                <span>B/F</span>
-                <select class="hud-select relic-main-select" data-type="body" data-hero="${hero.id}">${makeOpts(mBody, rel.mainStats.body)}</select>
-                <select class="hud-select relic-main-select" data-type="boots" data-hero="${hero.id}">${makeOpts(mBoots, rel.mainStats.boots)}</select>
+                <select class="hud-select relic-main-select" data-type="body" data-hero="${hero.id}">
+                  <option value="">[ BODY ]</option>
+                  ${generateOpts(mBody, rel.mainStats.body)}
+                </select>
+                <select class="hud-select relic-main-select" data-type="boots" data-hero="${hero.id}">
+                  <option value="">[ BOOTS ]</option>
+                  ${generateOpts(mBoots, rel.mainStats.boots)}
+                </select>
               </div>
               <div class="hud-row" style="margin-bottom: 5px;">
-                <span>O/R</span>
-                <select class="hud-select relic-main-select" data-type="sphere" data-hero="${hero.id}">${makeOpts(mSphere, rel.mainStats.sphere)}</select>
-                <select class="hud-select relic-main-select" data-type="rope" data-hero="${hero.id}">${makeOpts(mRope, rel.mainStats.rope)}</select>
+                <select class="hud-select relic-main-select" data-type="sphere" data-hero="${hero.id}">
+                  <option value="">[ SPHERE ]</option>
+                  ${generateOpts(mSphere, rel.mainStats.sphere)}
+                </select>
+                <select class="hud-select relic-main-select" data-type="rope" data-hero="${hero.id}">
+                  <option value="">[ ROPE ]</option>
+                  ${generateOpts(mRope, rel.mainStats.rope)}
+                </select>
               </div>
 
               <div class="hud-row">
-                <span>1/2</span>
-                <select class="hud-select relic-sub-select" data-index="0" data-hero="${hero.id}">${makeOpts(subs, rel.substatPriority[0])}</select>
-                <select class="hud-select relic-sub-select" data-index="1" data-hero="${hero.id}">${makeOpts(subs, rel.substatPriority[1])}</select>
+                <span class="sub-label">PR 1:</span>
+                <select class="hud-select relic-sub-select" data-index="0" data-hero="${hero.id}">
+                  <option value="">[ NONE ]</option>
+                  ${generateOpts(subs, rel.substatPriority[0])}
+                </select>
+                <span class="sub-label">PR 2:</span>
+                <select class="hud-select relic-sub-select" data-index="1" data-hero="${hero.id}">
+                  <option value="">[ NONE ]</option>
+                  ${generateOpts(subs, rel.substatPriority[1])}
+                </select>
               </div>
               <div class="hud-row">
-                <span>3/4</span>
-                <select class="hud-select relic-sub-select" data-index="2" data-hero="${hero.id}">${makeOpts(subs, rel.substatPriority[2])}</select>
-                <select class="hud-select relic-sub-select" data-index="3" data-hero="${hero.id}">${makeOpts(subs, rel.substatPriority[3])}</select>
+                <span class="sub-label">PR 3:</span>
+                <select class="hud-select relic-sub-select" data-index="2" data-hero="${hero.id}">
+                  <option value="">[ NONE ]</option>
+                  ${generateOpts(subs, rel.substatPriority[2])}
+                </select>
+                <span class="sub-label">PR 4:</span>
+                <select class="hud-select relic-sub-select" data-index="3" data-hero="${hero.id}">
+                  <option value="">[ NONE ]</option>
+                  ${generateOpts(subs, rel.substatPriority[3])}
+                </select>
               </div>
             </div>
           </div>
@@ -454,10 +614,28 @@ export function showLoadoutScreen() {
   });
 
   // --- WIRING LISTENERS ---
+
+  // ✨ NEW: The universal function to update stats and trigger the Neon Flash!
+  const refreshStatsAndAnimate = (heroId) => {
+    const hero = heroDatabase[heroId];
+    const saveState = playerSaveData.heroes[heroId];
+    const statsPanel = document.getElementById(`stats-panel-${heroId}`);
+
+    if (statsPanel) {
+      // Inject new math
+      statsPanel.innerHTML = generateStatsHTML(hero, saveState);
+
+      // Force the CSS animation to restart
+      statsPanel.classList.remove("stat-animate");
+      void statsPanel.offsetWidth; // Magic browser reflow trick
+      statsPanel.classList.add("stat-animate");
+    }
+  };
+
   const saveAction = (heroId, updateFunc) => {
     updateFunc();
     playSFX("hover");
-    updateLoadoutStats(heroId);
+    refreshStatsAndAnimate(heroId); // ✨ Triggers the flash!
   };
 
   document
@@ -473,6 +651,7 @@ export function showLoadoutScreen() {
         ),
       ),
     );
+
   document
     .querySelectorAll(".eidolon-select")
     .forEach((sel) =>
@@ -486,6 +665,7 @@ export function showLoadoutScreen() {
         ),
       ),
     );
+
   document
     .querySelectorAll(".trace-select")
     .forEach((sel) =>
@@ -500,7 +680,6 @@ export function showLoadoutScreen() {
       ),
     );
 
-  // ✨ LC Listeners trigger the updateLCUI function!
   document.querySelectorAll(".lc-select").forEach((sel) =>
     sel.addEventListener("change", (e) =>
       saveAction(e.target.dataset.hero, () => {
@@ -510,22 +689,24 @@ export function showLoadoutScreen() {
       }),
     ),
   );
+
   document.querySelectorAll(".lc-lvl-select").forEach((sel) =>
     sel.addEventListener("change", (e) =>
       saveAction(e.target.dataset.hero, () => {
         playerSaveData.heroes[e.target.dataset.hero].lcLevel = parseInt(
           e.target.value,
         );
-        updateLCUI(e.target.dataset.hero); // Usually just stats change here, but good practice
+        updateLCUI(e.target.dataset.hero);
       }),
     ),
   );
+
   document.querySelectorAll(".lc-si-select").forEach((sel) =>
     sel.addEventListener("change", (e) =>
       saveAction(e.target.dataset.hero, () => {
         playerSaveData.heroes[e.target.dataset.hero].lcSuperimposition =
           parseInt(e.target.value);
-        updateLCUI(e.target.dataset.hero); // ✨ Redraws the text to show the higher numbers!
+        updateLCUI(e.target.dataset.hero);
       }),
     ),
   );
@@ -536,7 +717,7 @@ export function showLoadoutScreen() {
     updateFunc(hId);
     playSFX("skillPop");
     updateRelicDescriptions(hId);
-    updateLoadoutStats(hId); // ✨ ADDED: Instantly redraws the HP/ATK/CRIT numbers!
+    refreshStatsAndAnimate(hId); // ✨ Triggers the flash!
   };
 
   document
@@ -596,7 +777,6 @@ export function showLoadoutScreen() {
     );
 }
 
-// --- Roster Selection Functions (UNCHANGED) ---
 // --- Roster Selection Functions ---
 function startCustomHeroSelect() {
   mainMenuScreen.style.display = "none";

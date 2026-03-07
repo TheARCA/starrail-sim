@@ -44,8 +44,8 @@ const SUBSTAT_WEIGHTS = [18, 14, 10, 8];
 
 export function compileRelicStats(relicData) {
   let totals = {
-    hpFlat: RELIC_MAIN_STATS.hpFlat, // Head always gives Flat HP
-    atkFlat: RELIC_MAIN_STATS.atkFlat, // Hands always give Flat ATK
+    hpFlat: 0,
+    atkFlat: 0,
     hpPct: 0,
     atkPct: 0,
     defPct: 0,
@@ -67,15 +67,26 @@ export function compileRelicStats(relicData) {
     imaginaryDmg: 0,
   };
 
-  const mains = relicData?.mainStats || {};
-  const priorities = relicData?.substatPriority || [
-    "spd",
-    "atkPct",
-    "critRate",
-    "critDmg",
-  ];
+  if (!relicData) return totals;
 
-  // 1. Add Chosen Main Stats
+  const mains = relicData.mainStats || {};
+  const priorities = relicData.substatPriority || ["", "", "", ""];
+
+  const hasAnySubstat = priorities.some((p) => p !== "");
+  const hasRelics =
+    relicData.relicSet1 ||
+    relicData.relicSet2 ||
+    mains.body ||
+    mains.boots ||
+    hasAnySubstat;
+  const hasPlanars =
+    relicData.planarSet || mains.sphere || mains.rope || hasAnySubstat;
+
+  // 1. Add Main Stats ONLY if the slot is actually being used
+  if (hasRelics) {
+    totals.hpFlat += RELIC_MAIN_STATS.hpFlat; // Head
+    totals.atkFlat += RELIC_MAIN_STATS.atkFlat; // Hands
+  }
   if (mains.body)
     totals[mains.body] =
       (totals[mains.body] || 0) + RELIC_MAIN_STATS[mains.body];
@@ -89,22 +100,18 @@ export function compileRelicStats(relicData) {
     totals[mains.rope] =
       (totals[mains.rope] || 0) + RELIC_MAIN_STATS[mains.rope];
 
-  // 2. Map out the 6 Relic Pieces and their specific Main Stats
-  const pieces = [
-    "hpFlat", // Head
-    "atkFlat", // Hands
-    mains.body, // Body
-    mains.boots, // Boots
-    mains.sphere, // Sphere
-    mains.rope, // Rope
-  ];
+  // 2. Map out the 6 Relic Pieces (Using "empty" if the dropdown is [ NONE ])
+  let pieces = [];
+  if (hasRelics)
+    pieces.push(
+      "hpFlat",
+      "atkFlat",
+      mains.body || "empty",
+      mains.boots || "empty",
+    );
+  if (hasPlanars) pieces.push(mains.sphere || "empty", mains.rope || "empty");
 
-  // Roll distribution for a single piece: 9 rolls total (Base 4 + 5 Upgrades = God-tier piece)
-  // 1st Priority gets 4 rolls, 2nd gets 3, 3rd gets 1, 4th gets 1.
-  // (Across 6 pieces, this equals 54 total rolls!)
   const rollsPerPiece = [4, 3, 1, 1];
-
-  // If a stat is banned because it's the Main Stat, we pull from this fallback list
   const fallbacks = [
     "hpFlat",
     "atkFlat",
@@ -114,29 +121,41 @@ export function compileRelicStats(relicData) {
     "effectRes",
   ];
 
-  // 3. ✨ NEW: Process each of the 6 pieces individually to prevent collisions!
+  // 3. Process each piece individually
   pieces.forEach((mainStat) => {
     let validSubstats = [];
 
-    // Try to add the user's priority substats first
-    for (let stat of priorities) {
-      // THE GOLDEN RULE: Substat CANNOT be the same as the Main Stat!
-      if (stat !== mainStat && !validSubstats.includes(stat)) {
+    priorities.forEach((stat) => {
+      // ✨ NEW: If the user selected [ NONE ], we push an empty string so they get 0 rolls!
+      if (stat === "") {
+        validSubstats.push("");
+      }
+      // Normal valid stat
+      else if (stat !== mainStat && !validSubstats.includes(stat)) {
         validSubstats.push(stat);
       }
-    }
-
-    // If we rejected a priority stat because it matched the Main Stat, fill the empty slot with a fallback
-    for (let f of fallbacks) {
-      if (validSubstats.length >= 4) break;
-      if (f !== mainStat && !validSubstats.includes(f)) {
-        validSubstats.push(f);
+      // Collision! (e.g. Crit Rate priority on a Crit Rate body). Find a fallback!
+      else {
+        let fallbackFound = false;
+        for (let f of fallbacks) {
+          // Don't use a fallback if it's the main stat, or if the user already has it in their priority list
+          if (
+            !validSubstats.includes(f) &&
+            f !== mainStat &&
+            !priorities.includes(f)
+          ) {
+            validSubstats.push(f);
+            fallbackFound = true;
+            break;
+          }
+        }
+        if (!fallbackFound) validSubstats.push("");
       }
-    }
+    });
 
-    // Apply the mathematical rolls to the 4 valid substats for this specific piece
+    // Apply the mathematical rolls
     validSubstats.forEach((statKey, index) => {
-      if (RELIC_SUBSTAT_ROLL[statKey]) {
+      if (statKey !== "" && RELIC_SUBSTAT_ROLL[statKey]) {
         totals[statKey] =
           (totals[statKey] || 0) +
           RELIC_SUBSTAT_ROLL[statKey] * rollsPerPiece[index];
@@ -163,9 +182,9 @@ export const relicSets = {
   },
   champion_of_streetwise_boxing: {
     name: "Champion of Streetwise Boxing",
-    desc2P: "Increases Physical DMG by 10%.",
+    desc2P: "Physical DMG +10%.",
     desc4P:
-      "After the wearer attacks or is hit, their ATK increases by 5% for the rest of the battle. This effect can stack up to 5 time(s).",
+      "Setelah pengguna melancarkan atau menerima serangan, ATK pengguna meningkat 5% selama pertempuran, dapat ditumpuk hingga 5 lapis.",
     apply2P: (hero) => {
       hero.physicalDmgBonus = (hero.physicalDmgBonus || 0) + 0.1;
     },

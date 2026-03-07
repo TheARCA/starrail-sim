@@ -72,12 +72,18 @@ export const lightconeDatabase = {
       const idx = (si || 1) - 1;
       const def = (this.passiveDef[idx] * 100).toFixed(0);
       const res = (this.passiveRes[idx] * 100).toFixed(0);
-      return `Increases the wearer's DEF by <span class="lc-highlight">${def}%</span>. After entering battle, increases All-Type RES of all allies by <span class="lc-highlight">${res}%</span>. Abilities of the same type cannot stack.`;
+      return `	Meningkatkan <span class="lc-highlight">${def}%</span> DEF pengguna. Setelah memasuki pertempuran, meningkatkan <span class="lc-highlight">${res}%</span> RES seluruh tipe seluruh rekan tim. Kemampuan yang serupa efeknya tidak dapat ditumpuk.`;
     },
 
     init: function (hero) {
       const siIndex = (hero.lcSuperimposition || 1) - 1;
       hero.baseDef = Math.floor(hero.baseDef * (1 + this.passiveDef[siIndex]));
+    },
+
+    // ✨ NEW: Tells the Loadout UI to add the DEF% to the character's stats instantly!
+    onEquip: function (hero, si) {
+      const siIndex = (si || 1) - 1;
+      hero.defPctBonus += this.passiveDef[siIndex];
     },
 
     onBattleStart: function (hero, squad) {
@@ -127,6 +133,12 @@ export const lightconeDatabase = {
       const siIndex = (hero.lcSuperimposition || 1) - 1;
       // ✨ Applies the static ATK bonus directly to base stats!
       hero.baseAtk = Math.floor(hero.baseAtk * (1 + this.passiveAtk[siIndex]));
+    },
+
+    // ✨ NEW: Tells the Loadout UI to add the ATK% to the character's stats instantly!
+    onEquip: function (hero, si) {
+      const siIndex = (si || 1) - 1;
+      hero.atkPctBonus += this.passiveAtk[siIndex];
     },
 
     // ✨ NEW: Dynamic Hook that checks the enemy count!

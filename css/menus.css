@@ -341,7 +341,7 @@
 }
 
 /* =========================================================
-   WIDESCREEN LOADOUT PANELS (RETRO CYBERPUNK EDITION)
+   WIDESCREEN LOADOUT PANELS (MAXIMUM OVERDRIVE NEON EDITION)
    ========================================================= */
 .loadout-list {
   display: flex;
@@ -352,20 +352,40 @@
   padding-bottom: 50px;
 }
 
-/* ✨ CHUNKY LOADOUT CARDS */
+/* ✨ DEEP VOID NEON CARDS (No more grey!) */
 .loadout-card {
   display: flex;
-  background: #050508;
-  border: 4px solid #222;
-  border-top: 8px solid #00f3ff; /* Massive neon top lip */
-  box-shadow: 12px 12px 0 #000; /* Hard arcade shadow */
+  background: #020205;
+  border: 4px solid #00f3ff;
+  border-top: 10px solid #00f3ff;
+  box-shadow:
+    15px 15px 0 rgba(0, 243, 255, 0.15),
+    inset 0 0 20px rgba(0, 243, 255, 0.1);
   padding: 25px;
   gap: 30px;
   font-family: "Press Start 2P", monospace;
   position: relative;
 }
+.loadout-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 243, 255, 0.03),
+    rgba(0, 243, 255, 0.03) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+  animation: crt-scroll 3s linear infinite;
+}
 
-/* LEFT COLUMN: Name, Lvl, Portrait */
+/* LEFT COLUMN */
 .loadout-col-left {
   width: 180px;
   display: flex;
@@ -377,25 +397,22 @@
 
 .name-header {
   display: flex;
-  flex-direction: column; /* Stacks the name and dropdown vertically */
+  flex-direction: column;
   align-items: flex-start;
-  gap: 12px; /* Adds breathing room between name and dropdown */
-  border-bottom: 4px solid #333;
+  gap: 12px;
+  border-bottom: 4px solid rgba(255, 0, 124, 0.5);
   padding-bottom: 15px;
 }
-
 .name-header h3 {
   color: #fff;
-  font-size: 12px;
+  font-size: 14px;
   margin: 0;
-  text-shadow: 3px 3px 0 #ff007c;
+  text-shadow: 4px 4px 0 #ff007c;
   line-height: 1.4;
-  word-wrap: break-word; /* Allows massive names to safely wrap to the next line */
+  word-wrap: break-word;
   width: 100%;
-  animation: neon-flicker 6s infinite alternate;
 }
 
-/* ✨ CHUNKY FULL-WIDTH LEVEL SELECTOR */
 .hero-lvl-select {
   appearance: none;
   -webkit-appearance: none;
@@ -403,59 +420,97 @@
   color: #fff;
   border: 2px solid #fff;
   font-family: "Press Start 2P", monospace;
-  font-size: 8px;
-  padding: 8px; /* Slightly fatter padding */
+  font-size: 10px;
+  padding: 10px;
   cursor: pointer;
   outline: none;
-  box-shadow: 4px 4px 0 #000;
-  transition:
-    transform 0.1s,
-    box-shadow 0.1s;
-
-  width: 100%; /* Forces it to stretch like a hardware cartridge! */
-  text-align: center; /* Centers the "LVL 80" text */
+  box-shadow: 6px 6px 0 rgba(255, 0, 124, 0.4);
+  transition: all 0.1s;
+  width: 100%;
+  text-align: center;
 }
-
 .hero-lvl-select:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 #fff;
+  box-shadow: 8px 8px 0 #fff;
   color: #000;
   background: #fff;
 }
 
 .loadout-portrait {
-  border: 4px solid #222;
+  border: 4px solid #00f3ff;
   height: 180px;
   width: 100%;
   background: #000;
   position: relative;
-  box-shadow: 6px 6px 0 #000;
+  box-shadow: 8px 8px 0 rgba(0, 243, 255, 0.3);
 }
 .loadout-portrait img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: contrast(1.2);
+  filter: contrast(1.3) saturate(1.2);
 }
 
-/* Base Stats Panel */
 .loadout-stats {
-  background: #000;
+  background: rgba(0, 243, 255, 0.05);
   border: 2px solid #00f3ff;
-  border-left: 6px solid #00f3ff;
-  padding: 12px;
-  font-size: 8px;
-  line-height: 2.2;
-  color: #ddd;
-  box-shadow: 4px 4px 0 #000;
+  border-left: 8px solid #00f3ff;
+  padding: 15px;
+  box-shadow: 6px 6px 0 rgba(0, 243, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.stat-bonus {
-  color: #fcee0a;
+
+/* Beautifully aligns the Stat Name to the left, and the numbers to the right! */
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  color: #fff;
   text-shadow: 1px 1px 0 #000;
+  border-bottom: 2px dashed rgba(0, 243, 255, 0.2);
+  padding-bottom: 4px;
+}
+
+.stat-row span {
+  text-align: right;
+}
+
+.stat-bonus {
+  color: #fcee0a; /* Neon Yellow for the (+Plus) stats */
+  text-shadow:
+    1px 1px 0 #000,
+    0 0 5px rgba(252, 238, 10, 0.5);
   margin-left: 5px;
 }
 
-/* MAIN COLUMN: Equipment Grid */
+/* ✨ THE JUICE: The Stat Update Flash Animation */
+@keyframes stat-update-flash {
+  0% {
+    color: #fff;
+    text-shadow: 0 0 20px #fff;
+    transform: translateX(-10px);
+    background: rgba(255, 255, 255, 0.8);
+  }
+  50% {
+    color: #00f3ff;
+    text-shadow: 0 0 10px #00f3ff;
+    background: transparent;
+  }
+  100% {
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    transform: translateX(0);
+  }
+}
+
+.stat-animate {
+  animation: stat-update-flash 0.3s ease-out forwards;
+}
+
+/* MAIN COLUMN */
 .loadout-col-main {
   flex: 1;
   display: flex;
@@ -475,25 +530,36 @@
   gap: 20px;
 }
 
-/* ✨ CHUNKY HARDWARE MODULES */
+/* ✨ COLOR-CODED HARDWARE MODULES */
 .hud-module {
-  background: #000;
-  border: 3px solid #222;
-  padding: 20px 15px 15px 15px;
+  background: rgba(10, 10, 20, 0.8);
+  padding: 25px 15px 15px 15px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   position: relative;
-  box-shadow: 6px 6px 0 #000;
 }
+.box-traces {
+  border: 3px solid #ff007c;
+  box-shadow: 6px 6px 0 rgba(255, 0, 124, 0.3);
+}
+.box-lc {
+  border: 3px solid #fcee0a;
+  box-shadow: 6px 6px 0 rgba(252, 238, 10, 0.3);
+}
+.box-relics {
+  border: 3px solid #00f3ff;
+  box-shadow: 6px 6px 0 rgba(0, 243, 255, 0.3);
+}
+
 .hud-label {
   position: absolute;
-  top: -10px;
+  top: -12px;
   left: 10px;
   background: #000;
-  border: 2px solid;
-  font-size: 8px;
-  padding: 4px 6px;
+  border: 3px solid;
+  font-size: 9px;
+  padding: 6px 10px;
   text-shadow: 1px 1px 0 #000;
 }
 .label-traces {
@@ -514,75 +580,26 @@
   border-color: #fcee0a;
 }
 
-/* ✨ 3D CYBER DATA-PILLS */
-.hud-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  width: 100%;
-  flex-wrap: wrap;
-}
-.hud-row span {
-  font-size: 8px;
-  color: #aaa;
-  width: 35px;
-  text-shadow: 1px 1px 0 #000;
-}
-
-.hud-select {
-  appearance: none;
-  -webkit-appearance: none;
-  background: #0a0a0e;
-  border: 2px solid #333;
-  border-bottom: 4px solid #444; /* Physical 3D bottom */
-  color: #fff;
-  padding: 8px;
-  font-family: "Press Start 2P", monospace;
-  font-size: 8px;
-  outline: none;
-  cursor: pointer;
-  flex: 1;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  box-shadow: 2px 2px 0 #000;
-  transition: all 0.1s;
-}
-.hud-select:hover {
-  background: #111;
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 #fff;
-  border-bottom-color: #fff;
-}
-.hud-select:focus {
-  transform: translate(1px, 2px);
-  border-bottom-width: 2px;
-  margin-bottom: 2px;
-  box-shadow: 1px 1px 0 #fff;
-  color: #000;
-  background: #fff;
-}
-
-/* Widescreen CRT Relic Monitor */
+/* ✨ WIDESCREEN RELIC MONITOR */
 .hud-monitor {
-  background: #000;
-  border: 4px solid #222;
-  border-top: 6px solid #00f3ff;
+  background: #020205;
+  border: 4px solid #00f3ff;
+  border-top: 8px solid #00f3ff;
   padding: 20px;
   display: flex;
   justify-content: space-between;
   gap: 25px;
-  box-shadow: 8px 8px 0 #000;
+  box-shadow: 10px 10px 0 rgba(0, 243, 255, 0.2);
   position: relative;
 }
 .lc-monitor-half {
   flex: 1;
-  border-right: 4px dashed #333;
+  border-right: 4px dashed rgba(0, 243, 255, 0.3);
   padding-right: 25px;
   font-size: 8px;
   line-height: 2;
-  color: #ccc;
+  color: #00f3ff;
+  text-shadow: 1px 1px 0 #000;
 }
 .relic-monitor-half {
   flex: 2;
@@ -594,13 +611,94 @@
   font-size: 8px;
   line-height: 2;
   color: #fff;
-  background: #0a0a0e;
-  padding: 10px;
-  border-left: 4px solid #00f3ff;
-  border-bottom: 2px solid #222;
+  background: rgba(0, 243, 255, 0.05);
+  padding: 12px;
+  border-left: 6px solid #00f3ff;
+  border-bottom: 2px solid rgba(0, 243, 255, 0.3);
 }
 
-/* ✨ DATA CONTROL BAR FIXES */
+/* ✨ THE GLOWING DROPDOWNS (DATA PILLS) */
+.hud-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.sub-label {
+  font-size: 8px;
+  color: #fff;
+  width: 35px;
+  text-shadow: 1px 1px 0 #000;
+  font-weight: bold;
+}
+
+.hud-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 10px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  outline: none;
+  cursor: pointer;
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.1s;
+  font-weight: bold;
+}
+
+/* Trace Pills (Hot Pink) */
+.box-traces .hud-select {
+  background: rgba(255, 0, 124, 0.1);
+  border: 2px solid rgba(255, 0, 124, 0.5);
+  border-bottom: 4px solid #ff007c;
+  color: #ff007c;
+  box-shadow: 3px 3px 0 rgba(255, 0, 124, 0.2);
+}
+.box-traces .hud-select:hover,
+.box-traces .hud-select:focus {
+  background: #ff007c;
+  color: #fff;
+  border-bottom-color: #fff;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 #fff;
+}
+/* LC Pills (Neon Yellow) */
+.box-lc .hud-select {
+  background: rgba(252, 238, 10, 0.1);
+  border: 2px solid rgba(252, 238, 10, 0.5);
+  border-bottom: 4px solid #fcee0a;
+  color: #fcee0a;
+  box-shadow: 3px 3px 0 rgba(252, 238, 10, 0.2);
+}
+.box-lc .hud-select:hover,
+.box-lc .hud-select:focus {
+  background: #fcee0a;
+  color: #000;
+  border-bottom-color: #fff;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 #fff;
+}
+/* Relic Pills (Cyan) */
+.box-relics .hud-select {
+  background: rgba(0, 243, 255, 0.1);
+  border: 2px solid rgba(0, 243, 255, 0.5);
+  border-bottom: 4px solid #00f3ff;
+  color: #00f3ff;
+  box-shadow: 3px 3px 0 rgba(0, 243, 255, 0.2);
+}
+.box-relics .hud-select:hover,
+.box-relics .hud-select:focus {
+  background: #00f3ff;
+  color: #000;
+  border-bottom-color: #fff;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 #fff;
+}
+
 .loadout-control-bar {
   display: flex;
   justify-content: flex-end;
@@ -608,9 +706,13 @@
   margin-bottom: -15px;
 }
 .loadout-control-bar .hud-select {
+  background: #000;
+  border: 2px solid #333;
+  color: #fff;
   box-shadow: 4px 4px 0 #000;
 }
 .loadout-control-bar .hud-select:hover {
   transform: translate(-3px, -3px);
   box-shadow: 7px 7px 0 #fff;
+  border-color: #fff;
 }

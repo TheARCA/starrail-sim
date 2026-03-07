@@ -15,7 +15,19 @@ export function initSaveData() {
       ultLvl: 1,
       talentLvl: 1,
       eidolon: 0,
-      relics: null, // Keep it clean for the JSON
+      // ✨ NEW: Standardized empty relic schema!
+      relics: {
+        relicSet1: "",
+        relicSet2: "",
+        planarSet: "",
+        mainStats: {
+          body: "",
+          boots: "",
+          sphere: "",
+          rope: "",
+        },
+        substatPriority: ["", "", "", ""],
+      },
     };
   });
 }
@@ -23,7 +35,7 @@ export function initSaveData() {
 // Call it immediately on load
 initSaveData();
 
-// ✨ NEW: EXPORT PROTOCOL
+// ✨ EXPORT PROTOCOL
 export function exportLoadout() {
   const dataStr = JSON.stringify(playerSaveData, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
@@ -39,7 +51,7 @@ export function exportLoadout() {
   URL.revokeObjectURL(url);
 }
 
-// ✨ NEW: IMPORT PROTOCOL
+// ✨ IMPORT PROTOCOL
 export function importLoadout(file, onSuccess) {
   const reader = new FileReader();
   reader.onload = (e) => {
