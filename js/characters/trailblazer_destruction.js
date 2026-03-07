@@ -1,7 +1,7 @@
 export const trailblazer_destruction = {
   id: "trailblazer_destruction",
   name: "Trailblazer",
-  imageSrc: "../../img/chars/trailblazer_1.webp",
+  imageSrc: "img/chars/trailblazer_1.webp",
   type: "physical",
   path: "destruction",
 
@@ -163,3 +163,4 @@ export const trailblazer_destruction = {
     }
   },
 };
+
