@@ -51,7 +51,7 @@ btnUlt.addEventListener("click", () => handleActionInput("ultimate"));
 
 // --- UTILITIES ---
 function showVoiceline(speaker, text) {
-  logEl.innerHTML = `<div style="margin-top: 10px; font-size: 24px; text-shadow: 0 0 5px rgba(0,243,255,0.5);">
+  logEl.innerHTML = `<div style="margin-top: 10px; text-shadow: 0 0 5px rgba(0,243,255,0.5);">
     <span style="color: #fcee0a; font-weight: bold;">${speaker.toUpperCase()}:</span> 
     <span style="color: #fff; font-style: italic;">"${text}"</span>
   </div>`;
@@ -2340,4 +2340,3 @@ document.addEventListener("keyup", (e) => {
     document.body.classList.remove("show-cursor");
   }
 });
-

@@ -22,7 +22,7 @@ export const lightconeDatabase = {
       const idx = (si || 1) - 1;
       const atk = (this.passiveAtkPerStack[idx] * 100).toFixed(0);
       const dmg = (this.passiveBreakDmg[idx] * 100).toFixed(0);
-      return `Whenever the wearer attacks, their ATK is increased by <span class="lc-highlight">${atk}%</span> in this battle. This effect can stack up to 4 time(s). After the wearer inflicts Weakness Break on enemies, the wearer's DMG increases by <span class="lc-highlight">${dmg}%</span> for 2 turn(s).`;
+      return `	Setiap kali pengguna melancarkan serangan, ATK dari pengguna akan meningkat <span class="lc-highlight">${atk}%</span> selama pertempuran, efek tersebut dapat ditumpuk hingga 4 lapis. Ketika pengguna mengakibatkan Weakness Break pada target musuh, DMG yang diakibatkan pengguna akan meningkat <span class="lc-highlight">${dmg}%</span> selama 2 giliran.`;
     },
 
     init: function (hero) {

@@ -37,9 +37,10 @@ export const RELIC_SUBSTAT_ROLL = {
   breakEffect: 0.0582,
 };
 
-// The Auto-Distribution Budget (28 targeted rolls = Very strong endgame build)
-// [1st Priority (12 rolls), 2nd Priority (8 rolls), 3rd Priority (5 rolls), 4th Priority (3 rolls)]
-const SUBSTAT_WEIGHTS = [12, 8, 5, 3];
+// The Auto-Distribution Budget (50 targeted rolls = God-Tier Endgame Build)
+// 6 Relics * ~8.5 average rolls per relic = ~50 total substat rolls
+// [1st Priority (18), 2nd Priority (14), 3rd Priority (10), 4th Priority (8)]
+const SUBSTAT_WEIGHTS = [18, 14, 10, 8];
 
 export function compileRelicStats(relicData) {
   let totals = {
@@ -66,33 +67,82 @@ export function compileRelicStats(relicData) {
     imaginaryDmg: 0,
   };
 
-  // 1. Add Chosen Main Stats
-  if (relicData && relicData.mainStats) {
-    const mains = relicData.mainStats;
-    if (mains.body)
-      totals[mains.body] =
-        (totals[mains.body] || 0) + RELIC_MAIN_STATS[mains.body];
-    if (mains.boots)
-      totals[mains.boots] =
-        (totals[mains.boots] || 0) + RELIC_MAIN_STATS[mains.boots];
-    if (mains.sphere)
-      totals[mains.sphere] =
-        (totals[mains.sphere] || 0) + RELIC_MAIN_STATS[mains.sphere];
-    if (mains.rope)
-      totals[mains.rope] =
-        (totals[mains.rope] || 0) + RELIC_MAIN_STATS[mains.rope];
-  }
+  const mains = relicData?.mainStats || {};
+  const priorities = relicData?.substatPriority || [
+    "spd",
+    "atkPct",
+    "critRate",
+    "critDmg",
+  ];
 
-  // 2. Auto-Distribute Substats based on Priority
-  if (relicData && relicData.substatPriority) {
-    relicData.substatPriority.forEach((statKey, index) => {
+  // 1. Add Chosen Main Stats
+  if (mains.body)
+    totals[mains.body] =
+      (totals[mains.body] || 0) + RELIC_MAIN_STATS[mains.body];
+  if (mains.boots)
+    totals[mains.boots] =
+      (totals[mains.boots] || 0) + RELIC_MAIN_STATS[mains.boots];
+  if (mains.sphere)
+    totals[mains.sphere] =
+      (totals[mains.sphere] || 0) + RELIC_MAIN_STATS[mains.sphere];
+  if (mains.rope)
+    totals[mains.rope] =
+      (totals[mains.rope] || 0) + RELIC_MAIN_STATS[mains.rope];
+
+  // 2. Map out the 6 Relic Pieces and their specific Main Stats
+  const pieces = [
+    "hpFlat", // Head
+    "atkFlat", // Hands
+    mains.body, // Body
+    mains.boots, // Boots
+    mains.sphere, // Sphere
+    mains.rope, // Rope
+  ];
+
+  // Roll distribution for a single piece: 9 rolls total (Base 4 + 5 Upgrades = God-tier piece)
+  // 1st Priority gets 4 rolls, 2nd gets 3, 3rd gets 1, 4th gets 1.
+  // (Across 6 pieces, this equals 54 total rolls!)
+  const rollsPerPiece = [4, 3, 1, 1];
+
+  // If a stat is banned because it's the Main Stat, we pull from this fallback list
+  const fallbacks = [
+    "hpFlat",
+    "atkFlat",
+    "defFlat",
+    "defPct",
+    "hpPct",
+    "effectRes",
+  ];
+
+  // 3. ✨ NEW: Process each of the 6 pieces individually to prevent collisions!
+  pieces.forEach((mainStat) => {
+    let validSubstats = [];
+
+    // Try to add the user's priority substats first
+    for (let stat of priorities) {
+      // THE GOLDEN RULE: Substat CANNOT be the same as the Main Stat!
+      if (stat !== mainStat && !validSubstats.includes(stat)) {
+        validSubstats.push(stat);
+      }
+    }
+
+    // If we rejected a priority stat because it matched the Main Stat, fill the empty slot with a fallback
+    for (let f of fallbacks) {
+      if (validSubstats.length >= 4) break;
+      if (f !== mainStat && !validSubstats.includes(f)) {
+        validSubstats.push(f);
+      }
+    }
+
+    // Apply the mathematical rolls to the 4 valid substats for this specific piece
+    validSubstats.forEach((statKey, index) => {
       if (RELIC_SUBSTAT_ROLL[statKey]) {
-        const rollCount = SUBSTAT_WEIGHTS[index] || 0;
         totals[statKey] =
-          (totals[statKey] || 0) + RELIC_SUBSTAT_ROLL[statKey] * rollCount;
+          (totals[statKey] || 0) +
+          RELIC_SUBSTAT_ROLL[statKey] * rollsPerPiece[index];
       }
     });
-  }
+  });
 
   return totals;
 }

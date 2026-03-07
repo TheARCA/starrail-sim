@@ -597,6 +597,7 @@ export function showLoadoutScreen() {
 }
 
 // --- Roster Selection Functions (UNCHANGED) ---
+// --- Roster Selection Functions ---
 function startCustomHeroSelect() {
   mainMenuScreen.style.display = "none";
   selectionScreen.style.display = "block";
@@ -604,36 +605,76 @@ function startCustomHeroSelect() {
   rosterContainer.className = "";
 
   const titleBanner = document.createElement("div");
-  titleBanner.innerHTML = `<h2 style="color: #fcee0a; text-shadow: 4px 4px 0 #ff007c; margin-bottom: 40px; letter-spacing: 2px;">/// INITIALIZE_SIMULATION_PARAMETERS</h2>`;
+  titleBanner.innerHTML = `<h2 style="color: #fcee0a; text-shadow: 4px 4px 0 #ff007c; margin-bottom: 30px; letter-spacing: 2px; text-align: center;">/// INITIALIZE_SIMULATION_PARAMETERS</h2>`;
   rosterContainer.appendChild(titleBanner);
 
   heroSelection = {};
   enemySelection = {};
   heroSelectionQueue = [];
   enemySelectionQueue = [];
-  selectionControls.style.display = "block";
+
+  // Center the "START BATTLE" button nicely
+  selectionControls.style.display = "";
+  selectionControls.style.justifyContent = "";
+  selectionControls.style.marginTop = "";
   btnStartBattle.disabled = true;
 
-  const heroSection = document.createElement("div");
-  heroSection.style.marginBottom = "50px";
-  heroSection.innerHTML = `<h3 style="color:#00f3ff; margin-bottom:15px; text-shadow: 2px 2px 0 #000;">> SELECT_SQUAD (MAX 4)</h3>`;
+  // ✨ NEW: The Split-Screen Container
+  const splitContainer = document.createElement("div");
+  splitContainer.className = "selection-split";
+
+  // --- HERO PANEL (LEFT) ---
+  const heroPanel = document.createElement("div");
+  heroPanel.className = "selection-panel panel-heroes";
+  // ✨ Added the dynamic counter span
+  heroPanel.innerHTML = `<div class="panel-header"><h3>> SELECT_SQUAD</h3> <span class="roster-count" id="hero-count-display">0/4</span></div>`;
   const heroGrid = document.createElement("div");
   heroGrid.className = "roster-grid";
-  heroSection.appendChild(heroGrid);
-  rosterContainer.appendChild(heroSection);
+  heroPanel.appendChild(heroGrid);
+  splitContainer.appendChild(heroPanel);
 
-  const enemySection = document.createElement("div");
-  enemySection.innerHTML = `<h3 style="color:#ff007c; margin-bottom:15px; text-shadow: 2px 2px 0 #000;">> SELECT_ENEMIES (MAX 5)</h3>`;
+  // --- ENEMY PANEL (RIGHT) ---
+  const enemyPanel = document.createElement("div");
+  enemyPanel.className = "selection-panel panel-enemies";
+  // ✨ Added the dynamic counter span
+  enemyPanel.innerHTML = `<div class="panel-header"><h3>> SELECT_TARGETS</h3> <span class="roster-count" id="enemy-count-display">0/5</span></div>`;
   const enemyGrid = document.createElement("div");
-  enemyGrid.className = "roster-grid";
-  enemySection.appendChild(enemyGrid);
-  rosterContainer.appendChild(enemySection);
 
+  enemyGrid.className = "roster-grid";
+  enemyPanel.appendChild(enemyGrid);
+  splitContainer.appendChild(enemyPanel);
+
+  rosterContainer.appendChild(splitContainer);
+
+  // Helper for elemental colors
+  const getElementColor = (type) => {
+    const colors = {
+      physical: "#aaa",
+      fire: "#ff5a5a",
+      ice: "#00f3ff",
+      lightning: "#cc00ff",
+      wind: "#00ff88",
+      quantum: "#6600ff",
+      imaginary: "#fcee0a",
+    };
+    return colors[type] || "#fff";
+  };
+
+  // Populate Heroes
   Object.values(heroDatabase).forEach((hero) => {
     const card = document.createElement("div");
     card.className = "roster-card hero-theme";
     card.id = `select-hero-${hero.id}`;
-    card.innerHTML = `<div class="count-badge" id="badge-hero-${hero.id}">1</div><div class="portrait-frame"><img src="${hero.imageSrc}"></div><div class="roster-stats"><h2 style="font-size: 11px; line-height: 1.4; margin-top: 5px;">${hero.name}</h2></div>`;
+
+    // ✨ NEW: Added the element-tag overlay to the portrait
+    card.innerHTML = `
+      <div class="count-badge" id="badge-hero-${hero.id}">SELECTED</div>
+      <div class="portrait-frame">
+        <img src="${hero.imageSrc}">
+        <div class="element-tag" style="color: ${getElementColor(hero.type)}">${hero.type}</div>
+      </div>
+      <div class="roster-stats"><h2>${hero.name}</h2></div>`;
+
     card.onclick = () => updateHeroCount(hero.id, 1);
     card.oncontextmenu = (e) => {
       e.preventDefault();
@@ -642,11 +683,21 @@ function startCustomHeroSelect() {
     heroGrid.appendChild(card);
   });
 
+  // Populate Enemies
   Object.values(enemyDatabase).forEach((enemy) => {
     const card = document.createElement("div");
     card.className = "roster-card enemy-theme";
     card.id = `select-enemy-${enemy.id}`;
-    card.innerHTML = `<div class="count-badge" id="badge-enemy-${enemy.id}">0</div><div class="portrait-frame"><img src="${enemy.imageSrc}"></div><div class="roster-stats"><h2 style="font-size: 11px; line-height: 1.4; margin-top: 5px;">${enemy.name}</h2></div>`;
+
+    // ✨ NEW: Tag shows the enemy's base level or class
+    card.innerHTML = `
+      <div class="count-badge" id="badge-enemy-${enemy.id}">x0</div>
+      <div class="portrait-frame">
+        <img src="${enemy.imageSrc}">
+        <div class="element-tag" style="color: #ff007c">LVL ${enemy.baseLevel || 1}</div>
+      </div>
+      <div class="roster-stats"><h2>${enemy.name}</h2></div>`;
+
     card.onclick = () => updateEnemyCount(enemy.id, 1);
     card.oncontextmenu = (e) => {
       e.preventDefault();
@@ -670,6 +721,11 @@ function updateHeroCount(id, change) {
   const card = document.getElementById(`select-hero-${id}`);
   if (heroSelection[id] > 0) card.classList.add("selected");
   else card.classList.remove("selected");
+
+  // ✨ NEW: Update the visual counter!
+  document.getElementById("hero-count-display").innerText =
+    `${heroSelectionQueue.length}/4`;
+
   checkStartConditions();
 }
 
@@ -689,6 +745,11 @@ function updateEnemyCount(id, change) {
   const card = document.getElementById(`select-enemy-${id}`);
   if (enemySelection[id] > 0) card.classList.add("selected");
   else card.classList.remove("selected");
+
+  // ✨ NEW: Update the visual counter!
+  document.getElementById("enemy-count-display").innerText =
+    `${enemySelectionQueue.length}/5`;
+
   checkStartConditions();
 }
 

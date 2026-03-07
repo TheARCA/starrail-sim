@@ -203,7 +203,7 @@
   box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.2);
   color: #00f3ff;
   flex: 1;
-  font-size: 22px;
+  font-size: 14px;
   height: 160px;
   line-height: 1.3;
   max-height: 160px;
@@ -261,7 +261,7 @@
 
 .sp-label {
   color: #fcee0a;
-  font-size: 24px;
+  font-size: 16px;
   font-weight: bold;
   margin: 0 15px 0 0;
   text-shadow: 2px 2px 0 #000;
