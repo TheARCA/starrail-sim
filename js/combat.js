@@ -161,7 +161,6 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
       finalDef += lc.stats[lcLvl].def;
     }
 
-    // ✨ NEW: PROCESS RELIC STATS
     let compiledRelics = {
       hpPct: 0,
       atkPct: 0,
@@ -180,13 +179,64 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
       compiledRelics = compileRelicStats(saveData.relics);
     }
 
-    // ✨ NEW: HSR Base Math Formula
+    let bonusStats = {
+      spd: (hero.spd || 100) + compiledRelics.spd,
+      hpPctBonus: 0,
+      atkPctBonus: 0,
+      defPctBonus: 0,
+      spdPctBonus: 0,
+      critRateBonus: 0,
+      critDmgBonus: 0,
+      physicalDmgBonus: 0,
+      fireDmgBonus: 0,
+      iceDmgBonus: 0,
+      lightningDmgBonus: 0,
+      windDmgBonus: 0,
+      quantumDmgBonus: 0,
+      imaginaryDmgBonus: 0,
+    };
+
+    // 1. Hero Traces
+    if (hero.applyTraces) hero.applyTraces(bonusStats, saveData.level);
+
+    // 2. Light Cone Passives
+    if (lc && lc.onEquip)
+      lc.onEquip(bonusStats, saveData.lcSuperimposition || 1);
+
+    // 3. Relic Set Passives
+    const pRelics = saveData.relics;
+    if (pRelics) {
+      let setCounts = {};
+      if (pRelics.relicSet1)
+        setCounts[pRelics.relicSet1] = (setCounts[pRelics.relicSet1] || 0) + 1;
+      if (pRelics.relicSet2)
+        setCounts[pRelics.relicSet2] = (setCounts[pRelics.relicSet2] || 0) + 1;
+
+      for (const [setId, count] of Object.entries(setCounts)) {
+        if (relicSets[setId] && relicSets[setId].apply2P)
+          relicSets[setId].apply2P(bonusStats);
+        if (count === 2 && relicSets[setId] && relicSets[setId].apply4P)
+          relicSets[setId].apply4P(bonusStats);
+      }
+      if (
+        pRelics.planarSet &&
+        relicSets[pRelics.planarSet] &&
+        relicSets[pRelics.planarSet].apply2P
+      ) {
+        relicSets[pRelics.planarSet].apply2P(bonusStats);
+      }
+    }
+
+    // ✨ COMBAT MATH: Now correctly multiplies Base Stats by the Relics AND the compiled Bonus Passives!
     const combatHp =
-      finalHp * (1 + compiledRelics.hpPct) + compiledRelics.hpFlat;
+      finalHp * (1 + compiledRelics.hpPct + bonusStats.hpPctBonus) +
+      compiledRelics.hpFlat;
     const combatAtk =
-      finalAtk * (1 + compiledRelics.atkPct) + compiledRelics.atkFlat;
+      finalAtk * (1 + compiledRelics.atkPct + bonusStats.atkPctBonus) +
+      compiledRelics.atkFlat;
     const combatDef =
-      finalDef * (1 + compiledRelics.defPct) + compiledRelics.defFlat;
+      finalDef * (1 + compiledRelics.defPct + bonusStats.defPctBonus) +
+      compiledRelics.defFlat;
     const combatSpd = (hero.spd || 100) + compiledRelics.spd;
 
     const inst = {
@@ -204,7 +254,6 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
         : null,
       lcState: {},
 
-      // ✨ Injected Relic Math
       baseHp: combatHp,
       hp: combatHp,
       baseAtk: combatAtk,
@@ -212,19 +261,29 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
       spd: combatSpd,
       baseSpd: combatSpd,
 
-      critRate: (hero.critRate || 0.05) + compiledRelics.critRate,
-      critDmg: (hero.critDmg || 0.5) + compiledRelics.critDmg,
+      critRate:
+        (hero.critRate || 0.05) +
+        compiledRelics.critRate +
+        bonusStats.critRateBonus,
+      critDmg:
+        (hero.critDmg || 0.5) +
+        compiledRelics.critDmg +
+        bonusStats.critDmgBonus,
       breakEffect: (hero.breakEffect || 0) + compiledRelics.breakEffect,
       ehr: (hero.ehr || 0) + compiledRelics.ehr,
 
       // Elemental Damage Injections
-      physicalDmgBonus: compiledRelics.physicalDmg || 0,
-      fireDmgBonus: compiledRelics.fireDmg || 0,
-      iceDmgBonus: compiledRelics.iceDmg || 0,
-      lightningDmgBonus: compiledRelics.lightningDmg || 0,
-      windDmgBonus: compiledRelics.windDmg || 0,
-      quantumDmgBonus: compiledRelics.quantumDmg || 0,
-      imaginaryDmgBonus: compiledRelics.imaginaryDmg || 0,
+      physicalDmgBonus:
+        (compiledRelics.physicalDmg || 0) + bonusStats.physicalDmgBonus,
+      fireDmgBonus: (compiledRelics.fireDmg || 0) + bonusStats.fireDmgBonus,
+      iceDmgBonus: (compiledRelics.iceDmg || 0) + bonusStats.iceDmgBonus,
+      lightningDmgBonus:
+        (compiledRelics.lightningDmg || 0) + bonusStats.lightningDmgBonus,
+      windDmgBonus: (compiledRelics.windDmg || 0) + bonusStats.windDmgBonus,
+      quantumDmgBonus:
+        (compiledRelics.quantumDmg || 0) + bonusStats.quantumDmgBonus,
+      imaginaryDmgBonus:
+        (compiledRelics.imaginaryDmg || 0) + bonusStats.imaginaryDmgBonus,
 
       energy: 0,
       shield: 0,
@@ -235,33 +294,6 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
       isUltQueued: false,
       uid: `hero_${id}_${i}`,
     };
-
-    const pRelics = saveData.relics;
-    if (pRelics) {
-      // 1. Apply Planar Set
-      if (pRelics.planarSet && relicSets[pRelics.planarSet]) {
-        if (relicSets[pRelics.planarSet].apply2P)
-          relicSets[pRelics.planarSet].apply2P(inst);
-      }
-
-      // 2. Apply Relic 1 (2P)
-      if (pRelics.relicSet1 && relicSets[pRelics.relicSet1]) {
-        if (relicSets[pRelics.relicSet1].apply2P)
-          relicSets[pRelics.relicSet1].apply2P(inst);
-      }
-
-      // 3. Apply Relic 2 (2P)
-      if (pRelics.relicSet2 && relicSets[pRelics.relicSet2]) {
-        if (relicSets[pRelics.relicSet2].apply2P)
-          relicSets[pRelics.relicSet2].apply2P(inst);
-      }
-
-      // 4. The 4-Piece Checker! If Slot 1 and Slot 2 match, grant the 4P Bonus!
-      if (pRelics.relicSet1 && pRelics.relicSet1 === pRelics.relicSet2) {
-        if (relicSets[pRelics.relicSet1].apply4P)
-          relicSets[pRelics.relicSet1].apply4P(inst);
-      }
-    }
 
     if (inst.init) inst.init();
     if (inst.lightCone && inst.lightCone.init) inst.lightCone.init(inst);
@@ -305,10 +337,25 @@ export function startCustomBattle(selectedHeroIds, selectedEnemyIds) {
   document.getElementById("enemy-squad-container").innerHTML = "";
 
   // Clear the battle log text so it's fresh for the new fight
+  // Clear the battle log text so it's fresh for the new fight
   const logEl = document.getElementById("battle-log");
   if (logEl) logEl.innerHTML = "";
 
   battleScreen.style.display = "block";
+
+  // ✨ NEW: FIRE ALL PRE-BATTLE HERO & LIGHT CONE HOOKS!
+  playerSquad.forEach((hero) => {
+    // Fire Hero Passives (Like March E2)
+    if (hero.onBattleStart) {
+      const msg = hero.onBattleStart(playerSquad);
+      if (msg) showVoiceline("SYSTEM", msg);
+    }
+    // Fire Light Cone Passives (Like Day One of My New Life)
+    if (hero.lightCone && hero.lightCone.onBattleStart) {
+      const msg = hero.lightCone.onBattleStart(hero, playerSquad);
+      if (msg) showVoiceline("SYSTEM", msg);
+    }
+  });
 
   // Check if anyone got a shield during the start phase and play the VFX!
   playerSquad.forEach((hero, index) => {

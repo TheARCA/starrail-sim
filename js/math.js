@@ -121,9 +121,8 @@ export function calculateDamage(
   let atkBonus = 0;
   let dmgBonus = 0;
 
-  // ✨ NEW: Apply Elemental Damage Bonus from Relics!
   if (attacker.isHero && attacker.type) {
-    const elementalKey = attacker.type + "DmgBonus"; // e.g., "lightningDmgBonus"
+    const elementalKey = attacker.type + "DmgBonus";
     if (attacker[elementalKey]) {
       dmgBonus += attacker[elementalKey];
     }
@@ -136,7 +135,6 @@ export function calculateDamage(
       dmgBonus += attacker.lightCone.getDynamicDmg(attacker);
   }
 
-  // ✨ NEW: Apply specific FUA Damage Multipliers!
   if (isFUA && attacker.isHero) {
     if (attacker.fuaDmgBonus) dmgBonus += attacker.fuaDmgBonus;
     if (attacker.lightCone && attacker.lightCone.getDynamicFuaDmg) {
@@ -167,12 +165,10 @@ export function calculateDamage(
     );
   }
 
-  // BASE DAMAGE CALCULATION
   const finalAtk = attacker.baseAtk * (1 + atkBonus);
   const baseDamage = finalAtk * multiplier + flatDamageBonus;
   const dmgBoosted = baseDamage * (1 + dmgBonus);
 
-  // DEF MULTIPLIER
   let defMultiplier;
   if (defender.isHero && defender.baseDef !== undefined) {
     defMultiplier =
@@ -181,32 +177,26 @@ export function calculateDamage(
     defMultiplier = (aLevel + 20) / (dLevel + aLevel + 40);
   }
 
-  // ✨ FIXED: DYNAMIC RES MULTIPLIER
   let resTarget = 0;
   if (defender.baseRes && defender.baseRes[attacker.type] !== undefined) {
-    // 1. Check if the enemy has a specific resistance to this element
     resTarget = defender.baseRes[attacker.type];
   } else if (!defender.isHero) {
-    // 2. Smart Fallback: If no dictionary is found, default to 0% for weak, 20% for everything else!
     resTarget =
       defender.weaknesses && defender.weaknesses.includes(attacker.type)
         ? 0.0
         : 0.2;
   } else {
-    // 3. Fallback for heroes being attacked
     resTarget = defender.res || 0;
   }
 
   const resPen = attacker.resPen || 0;
   const resMultiplier = 1 - (resTarget - resPen);
 
-  // CRIT MULTIPLIER
   const roll = Math.random();
   const finalCritRate = (attacker.critRate || 0.05) + critRateBonus;
   const isCrit = roll < finalCritRate;
   const critMultiplier = isCrit ? 1 + (attacker.critDmg || 0.5) : 1;
 
-  // ✨ NEW: VULNERABILITY MULTIPLIER (Normal Damage)
   let vulnMult = 1.0;
   if (defender.vulnerabilities) {
     let totalVuln =
@@ -216,12 +206,10 @@ export function calculateDamage(
     vulnMult = 1.0 + totalVuln;
   }
 
-  // ✨ UPDATED: FINAL DAMAGE MATH
   let finalDmg = Math.floor(
     dmgBoosted * defMultiplier * resMultiplier * critMultiplier * vulnMult,
   );
 
-  // Broken targets lose their innate 10% DMG Reduction shield
   if (defender.isBroken) finalDmg = Math.floor(finalDmg * 1.11);
 
   return { damage: finalDmg || 0, isCrit: isCrit };

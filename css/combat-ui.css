@@ -10,13 +10,12 @@
   flex-direction: column;
   gap: 20px;
   margin: 0;
-  max-width: 400px;
+  width: 400px; /* ✨ CHANGED: Strict width so the MEM knows exactly where to sit */
   padding: 0;
   position: absolute;
   bottom: 40px;
   right: 40px;
   z-index: 30;
-  /* ✨ NEW: Spring physics for sliding in and out */
   transition:
     transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
     opacity 0.3s ease-in;
@@ -241,7 +240,6 @@
   background: #ff007c;
 }
 
-/* --- SP INDICATORS --- */
 .sp-hud-container {
   align-items: center;
   display: flex;
@@ -254,8 +252,9 @@
   padding: 10px 20px;
   position: absolute;
   bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 460px;
+  left: auto; /* Kills the old centering */
+  transform: none; /* Kills the old centering */
   z-index: 20;
 }
 

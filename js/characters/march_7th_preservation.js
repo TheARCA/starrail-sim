@@ -27,7 +27,9 @@ export const march_7th_preservation = {
     this.state.maxCounters = this.eidolon >= 4 ? 3 : 2;
   },
 
+  // ✨ NEW: Pre-Battle Automatic Hooks
   onBattleStart: function (squad) {
+    // EIDOLON 2: Memory of It
     if (this.eidolon >= 2) {
       let target = squad[0];
       const isAnyoneInjured = squad.some((hero) => hero.hp < hero.baseHp);
@@ -43,9 +45,16 @@ export const march_7th_preservation = {
         }
       }
 
-      target.shield = this.baseDef * 0.24 + 320;
+      // ✨ Calculate it using 'this.baseDef'
+      const shieldAmt = Math.floor((this.baseDef || 0) * 0.24 + 320);
+
+      // Inject directly into the engine's shield variable
+      target.shield = shieldAmt;
       target.shieldDuration = 3;
       target.shieldSource = this.id;
+
+      // Return the log message!
+      return `MARCH 7TH GRANTED A ${shieldAmt} HP SHIELD TO ${target.name.toUpperCase()}`;
     }
   },
 

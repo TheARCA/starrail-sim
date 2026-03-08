@@ -21,9 +21,13 @@ export const trailblazer_destruction = {
   critRate: 0.05,
   critDmg: 0.5,
 
-  state: { isEnhanced: false, talentStacks: 0, e1Triggered: false },
+  state: {
+    isEnhanced: false,
+    talentStacks: 0,
+    e1Triggered: false,
+    fwBuffActive: false,
+  },
 
-  // ✨ NEW: Exact multiplier arrays mapped to Trace levels (Index 0 = Level 1)
   scaling: {
     basic: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1],
     skill: [
@@ -45,10 +49,63 @@ export const trailblazer_destruction = {
     ],
   },
 
+  applyTraces: function (heroData, currentLevel) {
+    let traceAtk = 0,
+      traceHp = 0,
+      traceDef = 0;
+
+    if (currentLevel >= 20) {
+      traceAtk += 0.04;
+    }
+    if (currentLevel >= 40) {
+      traceHp += 0.04;
+    }
+    if (currentLevel >= 50) {
+      traceAtk += 0.04;
+      traceDef += 0.05;
+    }
+    if (currentLevel >= 60) {
+      traceAtk += 0.06;
+    }
+    if (currentLevel >= 70) {
+      traceHp += 0.06;
+      traceAtk += 0.06;
+    }
+    if (currentLevel >= 80) {
+      traceAtk += 0.08;
+      traceHp += 0.08;
+      traceDef += 0.075;
+    }
+
+    // Injects them into the (+Bonus) pool instead of the Base Stats!
+    heroData.atkPctBonus = (heroData.atkPctBonus || 0) + traceAtk;
+    heroData.hpPctBonus = (heroData.hpPctBonus || 0) + traceHp;
+    heroData.defPctBonus = (heroData.defPctBonus || 0) + traceDef;
+  },
+
+  init: function () {
+    this.state.talentStacks = 0;
+    this.state.e1Triggered = false;
+    this.state.fwBuffActive = false;
+  },
+
+  onBattleStart: function () {
+    let msg = "";
+    if (this.level >= 40) {
+      this.energy = Math.min(this.maxEnergy, this.energy + 15);
+    }
+  },
+
   getDynamicAtkHero: function () {
-    // Array limits to prevent crashes if level somehow exceeds max
     const lvlIdx = Math.min((this.talentLvl || 1) - 1, 11);
     return this.state.talentStacks * this.scaling.talent[lvlIdx];
+  },
+
+  getDynamicDefHero: function () {
+    if (this.level >= 60) {
+      return this.state.talentStacks * 0.1;
+    }
+    return 0;
   },
 
   getDynamicCritRate: function (defender) {
@@ -73,16 +130,19 @@ export const trailblazer_destruction = {
 
     if (this.eidolon >= 6 && this.state.talentStacks < 2) {
       this.state.talentStacks++;
-      msg += "E6 TALENT PROC! ";
     }
 
     if (this.eidolon >= 1 && move.isEnhancedAttack && !this.state.e1Triggered) {
       this.energy = Math.min(this.maxEnergy, this.energy + 10);
       this.state.e1Triggered = true;
-      msg += "E1 ENERGY REGEN!";
     }
+  },
 
-    return msg !== "" ? msg : null;
+  onActionEnd: function () {
+    if (this.state.fwBuffActive) {
+      this.physicalDmgBonus -= 0.25;
+      this.state.fwBuffActive = false;
+    }
   },
 
   getButtonUI: function () {
@@ -159,8 +219,14 @@ export const trailblazer_destruction = {
         vfxMain: isEnhanced ? "fx-bat-enhanced-smash" : "fx-bat-smash",
         vfxAdj: isEnhanced ? "fx-bat-enhanced-hit" : "fx-bat-hit",
         voiceline: isEnhanced ? randomLine() : "Take this!",
+
+        onActionStart: (hero) => {
+          if (hero.level >= 80) {
+            hero.physicalDmgBonus = (hero.physicalDmgBonus || 0) + 0.25;
+            hero.state.fwBuffActive = true;
+          }
+        },
       };
     }
   },
 };
-

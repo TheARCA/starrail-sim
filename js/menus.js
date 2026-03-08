@@ -51,22 +51,6 @@ function enterFullScreen() {
     doc.requestFullscreen().catch((err) => console.warn(err));
 }
 
-function animateValue(obj, start, end, duration, prefix = "") {
-  let startTimestamp = null;
-  obj.dataset.target = end;
-  const step = (timestamp) => {
-    if (!startTimestamp) startTimestamp = timestamp;
-    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-    const ease = 1 - Math.pow(1 - progress, 3);
-    const current = Math.floor(start + (end - start) * ease);
-    if (parseInt(obj.dataset.target) !== end) return;
-    obj.innerHTML = current > 0 ? `${prefix}${current}` : "";
-    if (progress < 1) window.requestAnimationFrame(step);
-    else obj.innerHTML = end > 0 ? `${prefix}${end}` : "";
-  };
-  window.requestAnimationFrame(step);
-}
-
 function updateLoadoutStats(heroId) {
   const hero = heroDatabase[heroId];
   const save = playerSaveData.heroes[heroId];
@@ -189,7 +173,7 @@ function generateStatsHTML(hero, saveState) {
   const lvl = saveState.level || 1;
   const lcId = saveState.equippedLightCone;
   const lcLvl = saveState.lcLevel || 1;
-  const lcSi = saveState.lcSuperimposition || 1; // ✨ NEW: Grab Superimposition!
+  const lcSi = saveState.lcSuperimposition || 1;
   const lc = lcId ? lightconeDatabase[lcId] : null;
 
   // 2. Calculate Base Stats (Hero Base + Light Cone Base)
@@ -207,7 +191,7 @@ function generateStatsHTML(hero, saveState) {
   // 3. Get Relic Totals
   const totals = compileRelicStats(saveState.relics);
 
-  // ✨ NEW: SIMULATE BOTH RELIC SETS AND LIGHT CONE PASSIVES
+  // ✨ NEW: SIMULATE ALL PASSIVES FOR THE UI!
   let mockHero = {
     spd: baseSpd + (totals.spd || 0),
     hpPctBonus: 0,
@@ -216,7 +200,6 @@ function generateStatsHTML(hero, saveState) {
     spdPctBonus: 0,
     critRateBonus: 0,
     critDmgBonus: 0,
-    // Add extra stats just in case a Light Cone boosts them!
     ehrBonus: 0,
     effectResBonus: 0,
     breakEffectBonus: 0,
@@ -224,12 +207,17 @@ function generateStatsHTML(hero, saveState) {
     healingBonus: 0,
   };
 
-  // ✨ APPLY LIGHT CONE PASSIVE!
+  // Apply Hero Traces
+  if (hero.applyTraces) {
+    hero.applyTraces(mockHero, lvl);
+  }
+
+  // Apply Light Cone Passives
   if (lc && lc.onEquip) {
     lc.onEquip(mockHero, lcSi);
   }
 
-  // Apply Relic set bonuses
+  // Apply Relic Set Bonuses
   const r1 = saveState.relics?.relicSet1;
   const r2 = saveState.relics?.relicSet2;
   const p = saveState.relics?.planarSet;
@@ -247,7 +235,7 @@ function generateStatsHTML(hero, saveState) {
     relicSets[p].apply2P(mockHero);
   }
 
-  // Add all the injected mock bonuses to our final mathematical totals
+  // Add all injected bonuses to our math totals
   totals.hpPct = (totals.hpPct || 0) + mockHero.hpPctBonus;
   totals.atkPct = (totals.atkPct || 0) + mockHero.atkPctBonus;
   totals.defPct = (totals.defPct || 0) + mockHero.defPctBonus;
@@ -255,7 +243,7 @@ function generateStatsHTML(hero, saveState) {
   totals.critRate = (totals.critRate || 0) + mockHero.critRateBonus;
   totals.critDmg = (totals.critDmg || 0) + mockHero.critDmgBonus;
 
-  // 4. Calculate Final Bonus Stats (Base * Pct) + Flat
+  // 4. Calculate Final Bonus Stats
   const bonusHp =
     Math.floor(baseHp * (totals.hpPct || 0)) + (totals.hpFlat || 0);
   const bonusAtk =
@@ -622,12 +610,9 @@ export function showLoadoutScreen() {
     const statsPanel = document.getElementById(`stats-panel-${heroId}`);
 
     if (statsPanel) {
-      // Inject new math
       statsPanel.innerHTML = generateStatsHTML(hero, saveState);
-
-      // Force the CSS animation to restart
       statsPanel.classList.remove("stat-animate");
-      void statsPanel.offsetWidth; // Magic browser reflow trick
+      void statsPanel.offsetWidth; // CSS Magic to restart animation
       statsPanel.classList.add("stat-animate");
     }
   };
@@ -635,7 +620,7 @@ export function showLoadoutScreen() {
   const saveAction = (heroId, updateFunc) => {
     updateFunc();
     playSFX("hover");
-    refreshStatsAndAnimate(heroId); // ✨ Triggers the flash!
+    refreshStatsAndAnimate(heroId); // ✨ Calls the new animator!
   };
 
   document
@@ -717,7 +702,7 @@ export function showLoadoutScreen() {
     updateFunc(hId);
     playSFX("skillPop");
     updateRelicDescriptions(hId);
-    refreshStatsAndAnimate(hId); // ✨ Triggers the flash!
+    refreshStatsAndAnimate(hId);
   };
 
   document
