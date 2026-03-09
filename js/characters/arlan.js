@@ -1,7 +1,7 @@
 export const arlan = {
   id: "arlan",
   name: "Arlan",
-  imageSrc: "https://placehold.co/200x200/png?text=ARLAN", // Replace with his webp later
+  imageSrc: "img/chars/arlan.webp", // Replace with his webp later
   type: "lightning",
   path: "destruction",
 

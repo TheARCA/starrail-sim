@@ -757,3 +757,58 @@
   box-shadow: 0 0 10px #00f3ff;
   transform: rotate(45deg) scale(1.2);
 }
+
+/* =========================================================
+   📱 720p LAPTOP SCALING (RESPONSIVE FIXES)
+   ========================================================= */
+@media (max-width: 1366px), (max-height: 800px) {
+  /* Shrink the Terminal */
+  .bottom-console {
+    width: 320px;
+    bottom: 20px;
+    right: 20px;
+    gap: 15px;
+  }
+
+  /* Make the buttons smaller */
+  .btn-action {
+    padding: 12px 10px;
+    font-size: 10px;
+  }
+
+  /* Squish the Battle Log */
+  #battle-log {
+    height: 120px;
+    max-height: 120px;
+    padding: 10px;
+  }
+
+  /* Slide the SP Tracker to match the new 320px console */
+  .sp-hud-container {
+    bottom: 20px;
+    right: 360px; /* 320px console + 20px margin + 20px gap */
+    padding: 8px 15px;
+  }
+  .sp-label {
+    font-size: 12px;
+  }
+  .sp-pip {
+    height: 20px;
+    width: 20px;
+  }
+
+  /* Shrink the Turn Queue */
+  .turn-queue {
+    width: 75px;
+    padding: 15px 0;
+  }
+  .queue-item {
+    width: 35px;
+    height: 35px;
+  }
+  .queue-item.queue-active {
+    width: 50px;
+    height: 50px;
+    margin-left: 10px;
+  }
+}

@@ -123,3 +123,22 @@ h1 {
   transform: translate(-50%, -50%);
   z-index: 15;
 }
+
+/* =========================================================
+   📱 720p LAPTOP SCALING (RESPONSIVE FIXES)
+   ========================================================= */
+@media (max-width: 1366px), (max-height: 800px) {
+  /* Scale the Hero squad down by 20% and anchor to the bottom left */
+  #hero-squad-container {
+    transform: scale(0.8);
+    transform-origin: bottom left;
+    bottom: 20px;
+    left: 90px;
+  }
+
+  /* Scale the Enemy squad down by 20% and keep them centered */
+  #enemy-squad-container {
+    transform: translate(-50%, -50%) scale(0.8);
+    transform-origin: center center; /* Offsets the center shift slightly */
+  }
+}

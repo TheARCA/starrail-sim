@@ -1,7 +1,7 @@
 export const danheng = {
   id: "danheng",
   name: "Dan Heng",
-  imageSrc: "https://placehold.co/200x200/png?text=DAN+HENG", // Replace with your webp later!
+  imageSrc: "img/chars/danheng.webp",
   type: "wind",
   path: "hunt",
 

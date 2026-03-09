@@ -1,7 +1,7 @@
 export const kafka = {
   id: "kafka",
   name: "Kafka",
-  imageSrc: "https://placehold.co/200x200/png?text=KAFKA", // Replace with your webp later
+  imageSrc: "img/chars/kafka.webp", // Replace with your webp later
   type: "lightning",
   path: "nihility",
 

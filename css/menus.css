@@ -716,3 +716,42 @@
   box-shadow: 7px 7px 0 #fff;
   border-color: #fff;
 }
+
+/* =========================================================
+   📱 720p LAPTOP SCALING (RESPONSIVE FIXES)
+   ========================================================= */
+@media (max-width: 1366px), (max-height: 800px) {
+  /* Squish the Widescreen Loadout */
+  .loadout-list {
+    gap: 30px;
+  }
+  .loadout-card {
+    padding: 15px;
+    gap: 15px;
+  }
+  .equip-grid {
+    gap: 15px;
+  }
+  .hud-module {
+    padding: 18px 10px 10px 10px;
+    gap: 8px;
+  }
+  .loadout-portrait {
+    height: 140px;
+  }
+
+  /* Squish the Character Select Screen */
+  .selection-split {
+    gap: 20px;
+  }
+  .selection-panel {
+    padding: 15px;
+  }
+  .roster-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+  }
+  .roster-card .portrait-frame {
+    height: 100px;
+  }
+}
