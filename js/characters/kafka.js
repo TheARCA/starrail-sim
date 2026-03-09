@@ -61,7 +61,6 @@ export const kafka = {
     this.state.fuaUsedThisTurn = false; // Reset FUA limit
   },
 
-  // ✨ NEW: Listens for Allies using Basic ATK
   onAllyBasicATK: function (targetIndex) {
     if (!this.state.fuaUsedThisTurn) {
       this.state.fuaUsedThisTurn = true;
@@ -80,13 +79,11 @@ export const kafka = {
         onHit: (target) => {
           this.applyShock(target);
 
-          // ✨ E1: 100% Base Chance to apply 30% DoT Vulnerability for 2 turns
           if (this.eidolon >= 1) {
             target.vulnerabilities = target.vulnerabilities || {
               universal: 0,
               dot: 0,
             };
-            // Apply it only if it's not already active to prevent infinite stacking
             if (!target.state.kafkaE1Turns) target.vulnerabilities.dot += 0.3;
             target.state.kafkaE1Turns = 2;
           }
@@ -95,14 +92,12 @@ export const kafka = {
     }
     return null;
   },
-
-  // Helper to apply her ATK-scaling Shock
+  
   applyShock: function (target) {
     const uIdx = Math.min((this.ultLvl || 1) - 1, 11);
     let mult = this.scaling.ultShock[uIdx];
     let dur = 2;
 
-    // ✨ E6: Increases multiplier by 156% and duration by 1 turn!
     if (this.eidolon >= 6) {
       mult += 1.56;
       dur += 1;
@@ -141,13 +136,13 @@ export const kafka = {
         name: "Midnight Tumult",
         type: "single",
         genSP: 1,
-        genEN: 120,
+        genEN: 20,
         hits: 2,
         hitSplit: [0.5, 0.5],
         multiplier: this.scaling.basic[bIdx],
         toughnessDamage: 10,
         vfx: "fx-lightning-slash",
-        voiceline: "Time to say goodbye.",
+        voiceline: "This won't take long.",
       };
     } else if (actionType === "skill") {
       const sIdx = Math.min((this.skillLvl || 1) - 1, 11);
@@ -166,8 +161,6 @@ export const kafka = {
         toughnessAdj: 10,
         vfxMain: "fx-lightning-strike",
         vfxAdj: "fx-lightning-slash",
-        voiceline: "Good times never last.",
-        // ✨ UPDATED: Catches the squad array and passes it to the detonation engine
         onHit: (target, isMain, squad) => {
           if (isMain) this.detonateDoTs(target, detonateMult, null, squad);
         },
@@ -186,17 +179,15 @@ export const kafka = {
         multiplier: this.scaling.ultDmg[uIdx],
         toughnessDamage: 20,
         vfx: "fx-lightning-explosion",
-        voiceline: "Target confirmed... Boom.",
-        // ✨ UPDATED: Catches the squad array and passes it to the detonation engine
+        voiceline: "Time to say bye. BOOM.",
         onHit: (target, isMain, squad) => {
           this.applyShock(target);
           this.detonateDoTs(target, detonateMult, "SHOCK", squad);
         },
       };
     }
-  }, // ✨ FIXED: You were missing this closing brace and comma for useAction!
+  },
 
-  // ✨ DO-T DETONATION ENGINE
   detonateDoTs: function (target, percentage, specificType = null, squad = []) {
     let totalDetonateDmg = 0;
     let kafkaShockDetonated = false;
@@ -242,3 +233,4 @@ export const kafka = {
     }
   },
 };
+
